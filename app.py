@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template_string, redirect, session, send_file
 import sqlite3
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -53,7 +53,7 @@ users = {
 }
 
 # =====================================
-# 橋
+# 橋データ
 # =====================================
 
 bridges = {
@@ -401,6 +401,7 @@ def login():
         if user_id in users and users[user_id] == user_pw:
 
             session["login"] = True
+            session["user"] = user_id
 
             return redirect("/home")
 
@@ -422,6 +423,10 @@ def home():
 
         cursor = conn.cursor()
 
+        japan_time = (
+            datetime.now() + timedelta(hours=9)
+        ).strftime("%Y-%m-%d %H:%M")
+
         cursor.execute("""
 
         INSERT INTO data (
@@ -442,8 +447,8 @@ def home():
 
         """, (
 
-        datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "敦司",
+        japan_time,
+        session["user"],
         request.form["site"],
         request.form["bridge"],
         request.form["place"],
@@ -639,6 +644,7 @@ def bridge_page(bridge):
 
             <th>ID</th>
             <th>日時</th>
+            <th>入力者</th>
             <th>箇所</th>
             <th>工程</th>
             <th>膜厚</th>
@@ -656,6 +662,7 @@ def bridge_page(bridge):
 
                 <td>{row['id']}</td>
                 <td>{row['datetime']}</td>
+                <td>{row['user']}</td>
                 <td>{row['place']}</td>
                 <td>{row['process']}</td>
                 <td>{row['thickness']}</td>
