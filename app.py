@@ -93,7 +93,7 @@ bridges = {
 }
 
 # =====================================
-# ログイン
+# ログイン画面
 # =====================================
 
 login_html = """
@@ -180,7 +180,7 @@ button{
 """
 
 # =====================================
-# ホーム
+# ホーム画面
 # =====================================
 
 home_html = """
@@ -235,6 +235,7 @@ input,select{
     border-radius:10px;
     border:1px solid #ccc;
     box-sizing:border-box;
+    font-size:18px;
 }
 
 button{
@@ -370,7 +371,7 @@ function init(){
 </form>
 
 <a class="link" href="/list">
-橋一覧
+入力情報一覧
 </a>
 
 <a class="link" href="/backup">
@@ -462,7 +463,7 @@ def home():
     )
 
 # =====================================
-# 橋一覧
+# 入力情報一覧
 # =====================================
 
 @app.route("/list")
@@ -641,6 +642,7 @@ def bridge_page(bridge):
             <th>箇所</th>
             <th>工程</th>
             <th>膜厚</th>
+            <th>削除</th>
 
             </tr>
 
@@ -657,6 +659,21 @@ def bridge_page(bridge):
                 <td>{row['place']}</td>
                 <td>{row['process']}</td>
                 <td>{row['thickness']}</td>
+
+                <td>
+
+                <a href="/delete/{row['id']}"
+                style="
+                color:red;
+                font-weight:bold;
+                text-decoration:none;
+                ">
+
+                削除
+
+                </a>
+
+                </td>
 
                 </tr>
 
@@ -718,6 +735,30 @@ def bridge_page(bridge):
     </html>
 
     """
+
+# =====================================
+# 削除
+# =====================================
+
+@app.route("/delete/<id>")
+def delete(id):
+
+    conn = sqlite3.connect("database.db")
+
+    cursor = conn.cursor()
+
+    cursor.execute(f"""
+
+    DELETE FROM data
+
+    WHERE id={id}
+
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/list")
 
 # =====================================
 # バックアップ
