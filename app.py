@@ -657,7 +657,6 @@ def bridge_page(bridge):
 
             <tr style='background:#dfe7ff;'>
 
-            <th>ID</th>
             <th>日時</th>
             <th>入力者</th>
             <th>箇所</th>
@@ -675,7 +674,6 @@ def bridge_page(bridge):
 
                 <tr>
 
-                <td>{row['id']}</td>
                 <td>{row['datetime']}</td>
                 <td>{row['user']}</td>
                 <td>{row['place']}</td>
