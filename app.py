@@ -1,10 +1,54 @@
 from flask import Flask, request, render_template_string, redirect, session
 import pandas as pd
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 app.secret_key = "Sakura6788"
+
+users = {
+    "敦司":"6788",
+    "furui":"6788",
+    "tsuchiya":"6788",
+    "akashi":"6788",
+    "kawano":"6788"
+}
+
+bridges = {
+
+    "ミカドR6-1":[
+        "I 1-286",
+        "I 2-286",
+        "I 1-287",
+        "I 2-287",
+        "I 1-290",
+        "I 2-290",
+        "I 1-291",
+        "I 2-291",
+        "I-287",
+        "I-288",
+        "I-289",
+        "I-290",
+        "I-291",
+        "I-292"
+    ],
+
+    "ミカドR6-2":[
+        "Ⅱ 1-144",
+        "Ⅱ 2-144",
+        "入-144",
+        "Ⅱ 1-145",
+        "Ⅱ 2-145",
+        "入-145",
+        "Ⅱ 1-146",
+        "Ⅱ 2-146",
+        "入-146",
+        "Ⅱ-145",
+        "Ⅱ-146",
+        "Ⅱ-147"
+    ]
+}
 
 login_html = """
 
@@ -98,7 +142,7 @@ button{
 
 """
 
-html = """
+home_html = """
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -166,16 +210,6 @@ button{
     font-weight:bold;
 }
 
-.success{
-    background:#d4edda;
-    color:#155724;
-    padding:15px;
-    margin-top:20px;
-    border-radius:10px;
-    text-align:center;
-    font-weight:bold;
-}
-
 .link{
     display:block;
     text-align:center;
@@ -188,84 +222,60 @@ button{
     font-weight:bold;
 }
 
+.success{
+    background:#d4edda;
+    color:#155724;
+    padding:15px;
+    margin-top:20px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bold;
+}
+
 .user{
     text-align:right;
     font-weight:bold;
-    margin-bottom:15px;
     color:#1f3c88;
+    margin-bottom:20px;
 }
 
 </style>
 
 <script>
 
-const bridges = {
-
-"ミカドR6-1":[
-"I 1-286",
-"I 2-286",
-"I 1-287",
-"I 2-287",
-"I 1-290",
-"I 2-290",
-"I 1-291",
-"I 2-291",
-"I-287",
-"I-288",
-"I-289",
-"I-290",
-"I-291",
-"I-292"
-],
-
-"ミカドR6-2":[
-"Ⅱ 1-144",
-"Ⅱ 2-144",
-"入-144",
-"Ⅱ 1-145",
-"Ⅱ 2-145",
-"入-145",
-"Ⅱ 1-146",
-"Ⅱ 2-146",
-"入-146",
-"Ⅱ-145",
-"Ⅱ-146",
-"Ⅱ-147"
-]
-
-};
+const bridges = {{bridges|safe}}
 
 function updateBridge(){
 
-    const site = document.getElementById("site").value;
+    const site = document.getElementById("site").value
 
-    const bridge = document.getElementById("bridge");
+    const bridge = document.getElementById("bridge")
 
-    bridge.innerHTML = "";
+    bridge.innerHTML = ""
 
     bridges[site].forEach(function(item){
 
-        let option = document.createElement("option");
+        let option = document.createElement("option")
 
-        option.text = item;
+        option.text = item
 
-        option.value = item;
+        option.value = item
 
-        bridge.add(option);
+        bridge.add(option)
 
-    });
+    })
 
 }
 
 function updateProcess(){
 
-    const place = document.getElementById("place").value;
+    const place = document.getElementById("place").value
 
-    const process = document.getElementById("process");
+    const process = document.getElementById("process")
 
-    process.innerHTML = "";
+    process.innerHTML = ""
 
-    let list = [];
+    let list = []
 
     if(place == "一種部"){
 
@@ -278,7 +288,7 @@ function updateProcess(){
         "増し塗2",
         "中塗り",
         "上塗り"
-        ];
+        ]
 
     }
 
@@ -292,28 +302,28 @@ function updateProcess(){
         "下塗2",
         "中塗り",
         "上塗り"
-        ];
+        ]
 
     }
 
     list.forEach(function(item){
 
-        let option = document.createElement("option");
+        let option = document.createElement("option")
 
-        option.text = item;
+        option.text = item
 
-        option.value = item;
+        option.value = item
 
-        process.add(option);
+        process.add(option)
 
-    });
+    })
 
 }
 
 function init(){
 
-    updateBridge();
-    updateProcess();
+    updateBridge()
+    updateProcess()
 
 }
 
@@ -346,9 +356,7 @@ function init(){
 
 <label>橋名</label>
 
-<select id="bridge" name="bridge">
-
-</select>
+<select id="bridge" name="bridge"></select>
 
 <label>箇所</label>
 
@@ -367,9 +375,7 @@ function init(){
 
 <label>工程</label>
 
-<select id="process" name="process">
-
-</select>
+<select id="process" name="process"></select>
 
 <label>膜厚（μm）</label>
 <input name="thickness" required>
@@ -401,14 +407,6 @@ def login():
 
     if request.method == "POST":
 
-        users = {
-            "敦司":"6788",
-            "furui":"6788",
-            "tsuchiya":"6788",
-            "akashi":"6788",
-            "kawano":"6788"
-        }
-
         user_id = request.form["id"]
         user_pw = request.form["pw"]
 
@@ -429,7 +427,6 @@ def login():
 def home():
 
     if "login" not in session:
-
         return redirect("/")
 
     message = ""
@@ -440,39 +437,55 @@ def home():
 
         file_name = bridge + ".xlsx"
 
-        data = {
-            "入力者":[session["user"]],
-            "現場名":[request.form["site"]],
-            "橋名":[bridge],
-            "箇所":[request.form["place"]],
-            "ロット番号":[request.form["lot"]],
-            "工程":[request.form["process"]],
-            "膜厚":[request.form["thickness"]]
-        }
-
-        df = pd.DataFrame(data)
-
         if os.path.exists(file_name):
 
-            old = pd.read_excel(file_name)
+            df = pd.read_excel(file_name)
 
-            df = pd.concat([old, df], ignore_index=True)
+        else:
+
+            df = pd.DataFrame(columns=[
+                "No",
+                "日時",
+                "入力者",
+                "現場名",
+                "橋名",
+                "箇所",
+                "ロット番号",
+                "工程",
+                "膜厚"
+            ])
+
+        no = len(df) + 1
+
+        new_row = {
+            "No":no,
+            "日時":datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "入力者":session["user"],
+            "現場名":request.form["site"],
+            "橋名":bridge,
+            "箇所":request.form["place"],
+            "ロット番号":request.form["lot"],
+            "工程":request.form["process"],
+            "膜厚":request.form["thickness"]
+        }
+
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
         df.to_excel(file_name, index=False)
 
-        message = "<div class='success'>入力完了！</div>"
+        message = "<div class='success'>保存完了</div>"
 
     return render_template_string(
-        html,
-        message=message,
-        user=session["user"]
+        home_html,
+        bridges=bridges,
+        user=session["user"],
+        message=message
     )
 
 @app.route("/list")
-def list_data():
+def list_page():
 
     if "login" not in session:
-
         return redirect("/")
 
     files = [f for f in os.listdir() if f.endswith(".xlsx")]
@@ -486,13 +499,9 @@ def list_data():
         <tr>
 
         <td>
-
         <a href='/view/{file}'>
-
         {file}
-
         </a>
-
         </td>
 
         </tr>
@@ -514,12 +523,12 @@ def list_data():
     body{{
         background:#eef2f7;
         font-family:Arial;
-        padding:30px;
+        padding:20px;
     }}
 
     .box{{
         background:white;
-        padding:30px;
+        padding:20px;
         border-radius:20px;
     }}
 
@@ -528,7 +537,7 @@ def list_data():
         border-collapse:collapse;
     }}
 
-    td,th{{
+    th,td{{
         border:1px solid #ccc;
         padding:12px;
         text-align:center;
@@ -553,7 +562,6 @@ def list_data():
         padding:12px 20px;
         border-radius:10px;
         text-decoration:none;
-        font-weight:bold;
     }}
 
     </style>
@@ -587,18 +595,44 @@ def list_data():
     """
 
 @app.route("/view/<filename>")
-def view_file(filename):
+def view(filename):
 
     if "login" not in session:
-
         return redirect("/")
 
     df = pd.read_excel(filename)
 
-    table = df.to_html(
-        index=False,
-        classes="table"
-    )
+    rows = ""
+
+    for i,row in df.iterrows():
+
+        rows += f"""
+
+        <tr>
+
+        <td>{row['No']}</td>
+        <td>{row['日時']}</td>
+        <td>{row['入力者']}</td>
+        <td>{row['現場名']}</td>
+        <td>{row['橋名']}</td>
+        <td>{row['箇所']}</td>
+        <td>{row['ロット番号']}</td>
+        <td>{row['工程']}</td>
+        <td>{row['膜厚']}</td>
+
+        <td>
+
+        <a href='/delete/{filename}/{row["No"]}'>
+
+        削除
+
+        </a>
+
+        </td>
+
+        </tr>
+
+        """
 
     return f"""
 
@@ -627,19 +661,18 @@ def view_file(filename):
     table{{
         width:100%;
         border-collapse:collapse;
+        font-size:14px;
+    }}
+
+    th,td{{
+        border:1px solid #ccc;
+        padding:10px;
+        text-align:center;
     }}
 
     th{{
         background:#1f3c88;
         color:white;
-        padding:12px;
-        border:1px solid #ccc;
-    }}
-
-    td{{
-        padding:12px;
-        border:1px solid #ccc;
-        text-align:center;
     }}
 
     .back{{
@@ -649,6 +682,14 @@ def view_file(filename):
         color:white;
         padding:12px 20px;
         border-radius:10px;
+        text-decoration:none;
+    }}
+
+    .delete{{
+        background:red;
+        color:white;
+        padding:8px 12px;
+        border-radius:8px;
         text-decoration:none;
         font-weight:bold;
     }}
@@ -667,7 +708,26 @@ def view_file(filename):
 
     <h2>{filename}</h2>
 
-    {table}
+    <table>
+
+    <tr>
+
+    <th>No</th>
+    <th>日時</th>
+    <th>入力者</th>
+    <th>現場名</th>
+    <th>橋名</th>
+    <th>箇所</th>
+    <th>ロット番号</th>
+    <th>工程</th>
+    <th>膜厚</th>
+    <th>操作</th>
+
+    </tr>
+
+    {rows}
+
+    </table>
 
     </div>
 
@@ -676,6 +736,20 @@ def view_file(filename):
     </html>
 
     """
+
+@app.route("/delete/<filename>/<int:no>")
+def delete_data(filename,no):
+
+    if "login" not in session:
+        return redirect("/")
+
+    df = pd.read_excel(filename)
+
+    df = df[df["No"] != no]
+
+    df.to_excel(filename,index=False)
+
+    return redirect(f"/view/{filename}")
 
 if __name__ == "__main__":
     app.run(debug=False)
