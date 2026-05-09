@@ -557,6 +557,17 @@ def list_page():
         font-size:22px;
     }}
 
+    .back{{
+        display:inline-block;
+        margin-bottom:20px;
+        background:#1f3c88;
+        color:white;
+        padding:12px 20px;
+        border-radius:10px;
+        text-decoration:none;
+        font-weight:bold;
+    }}
+
     </style>
 
     </head>
@@ -564,6 +575,10 @@ def list_page():
     <body>
 
     <div class='box'>
+
+    <a class='back' href='/home'>
+    戻る
+    </a>
 
     <table>
 
@@ -721,6 +736,17 @@ def bridge_page(bridge):
         text-align:center;
     }}
 
+    .back{{
+        display:inline-block;
+        margin-bottom:20px;
+        background:#1f3c88;
+        color:white;
+        padding:12px 20px;
+        border-radius:10px;
+        text-decoration:none;
+        font-weight:bold;
+    }}
+
     </style>
 
     </head>
@@ -728,6 +754,10 @@ def bridge_page(bridge):
     <body>
 
     <div class='box'>
+
+    <a class='back' href='/list'>
+    戻る
+    </a>
 
     <h1>
     {bridge}
