@@ -7,6 +7,10 @@ app = Flask(__name__)
 
 app.secret_key = "Sakura6788"
 
+# =========================
+# ログインユーザー
+# =========================
+
 users = {
     "敦司":"6788",
     "furui":"6788",
@@ -14,6 +18,10 @@ users = {
     "akashi":"6788",
     "kawano":"6788"
 }
+
+# =========================
+# 橋データ
+# =========================
 
 bridges = {
 
@@ -50,9 +58,14 @@ bridges = {
     ]
 }
 
+# =========================
+# ログイン画面
+# =========================
+
 login_html = """
 
 <!DOCTYPE html>
+
 <html lang="ja">
 
 <head>
@@ -142,9 +155,14 @@ button{
 
 """
 
+# =========================
+# ホーム画面
+# =========================
+
 home_html = """
 
 <!DOCTYPE html>
+
 <html lang="ja">
 
 <head>
@@ -409,6 +427,10 @@ function init(){
 
 """
 
+# =========================
+# ログイン処理
+# =========================
+
 @app.route("/", methods=["GET","POST"])
 def login():
 
@@ -431,6 +453,10 @@ def login():
             error = "<div class='error'>ログイン失敗</div>"
 
     return render_template_string(login_html, error=error)
+
+# =========================
+# ホーム
+# =========================
 
 @app.route("/home", methods=["GET","POST"])
 def home():
@@ -496,6 +522,10 @@ def home():
         message=message
     )
 
+# =========================
+# ファイル一覧
+# =========================
+
 @app.route("/list")
 def list_page():
 
@@ -513,9 +543,13 @@ def list_page():
         <tr>
 
         <td>
+
         <a href='/view/{file}'>
+
         {file}
+
         </a>
+
         </td>
 
         </tr>
@@ -607,6 +641,139 @@ def list_page():
     </html>
 
     """
+
+# =========================
+# 詳細表示
+# =========================
+
+@app.route("/view/<filename>")
+def view(filename):
+
+    if "login" not in session:
+        return redirect("/")
+
+    df = pd.read_excel(filename)
+
+    rows = ""
+
+    for i,row in df.iterrows():
+
+        rows += f"""
+
+        <tr>
+
+        <td>{row['No']}</td>
+        <td>{row['日時']}</td>
+        <td>{row['入力者']}</td>
+        <td>{row['現場名']}</td>
+        <td>{row['橋名']}</td>
+        <td>{row['箇所']}</td>
+        <td>{row['部位']}</td>
+        <td>{row['ロット番号']}</td>
+        <td>{row['工程']}</td>
+        <td>{row['膜厚']}</td>
+
+        </tr>
+
+        """
+
+    return f"""
+
+    <!DOCTYPE html>
+
+    <html lang='ja'>
+
+    <head>
+
+    <meta charset='UTF-8'>
+
+    <style>
+
+    body{{
+        background:#eef2f7;
+        font-family:Arial;
+        padding:20px;
+    }}
+
+    .box{{
+        background:white;
+        padding:20px;
+        border-radius:20px;
+    }}
+
+    table{{
+        width:100%;
+        border-collapse:collapse;
+        font-size:14px;
+    }}
+
+    th,td{{
+        border:1px solid #ccc;
+        padding:10px;
+        text-align:center;
+    }}
+
+    th{{
+        background:#1f3c88;
+        color:white;
+    }}
+
+    .back{{
+        display:inline-block;
+        margin-bottom:20px;
+        background:#1f3c88;
+        color:white;
+        padding:12px 20px;
+        border-radius:10px;
+        text-decoration:none;
+    }}
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <div class='box'>
+
+    <a class='back' href='/list'>
+    戻る
+    </a>
+
+    <h2>{filename}</h2>
+
+    <table>
+
+    <tr>
+
+    <th>No</th>
+    <th>日時</th>
+    <th>入力者</th>
+    <th>現場名</th>
+    <th>橋名</th>
+    <th>箇所</th>
+    <th>部位</th>
+    <th>ロット番号</th>
+    <th>工程</th>
+    <th>膜厚</th>
+
+    </tr>
+
+    {rows}
+
+    </table>
+
+    </div>
+
+    </body>
+
+    </html>
+
+    """
+
+# =========================
+# 起動
+# =========================
 
 if __name__ == "__main__":
     app.run(debug=False)
