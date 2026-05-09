@@ -346,7 +346,65 @@ function init(){
 </select>
 
 <label>ロット番号</label>
-<input type="number" name="lot">
+
+<select name="lot">
+
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+
+<option>11</option>
+<option>12</option>
+<option>13</option>
+<option>14</option>
+<option>15</option>
+<option>16</option>
+<option>17</option>
+<option>18</option>
+<option>19</option>
+<option>20</option>
+
+<option>21</option>
+<option>22</option>
+<option>23</option>
+<option>24</option>
+<option>25</option>
+<option>26</option>
+<option>27</option>
+<option>28</option>
+<option>29</option>
+<option>30</option>
+
+<option>31</option>
+<option>32</option>
+<option>33</option>
+<option>34</option>
+<option>35</option>
+<option>36</option>
+<option>37</option>
+<option>38</option>
+<option>39</option>
+<option>40</option>
+
+<option>41</option>
+<option>42</option>
+<option>43</option>
+<option>44</option>
+<option>45</option>
+<option>46</option>
+<option>47</option>
+<option>48</option>
+<option>49</option>
+<option>50</option>
+
+</select>
 
 <label>測点</label>
 
@@ -362,6 +420,7 @@ function init(){
 <option>8</option>
 <option>9</option>
 <option>10</option>
+
 <option>11</option>
 <option>12</option>
 <option>13</option>
@@ -372,6 +431,7 @@ function init(){
 <option>18</option>
 <option>19</option>
 <option>20</option>
+
 <option>21</option>
 <option>22</option>
 <option>23</option>
@@ -513,37 +573,95 @@ def list_page():
 
     df = pd.read_sql_query("""
 
-    SELECT DISTINCT bridge
+    SELECT DISTINCT
+    site,
+    bridge
 
     FROM data
 
-    ORDER BY bridge
+    ORDER BY
+    site,
+    bridge
 
     """, conn)
 
     conn.close()
 
-    rows = ""
+    html = ""
 
-    for i,row in df.iterrows():
+    sites = df["site"].unique()
 
-        rows += f"""
+    for site in sites:
+
+        html += f"""
+
+        <h2 style='
+        background:#1f3c88;
+        color:white;
+        padding:15px;
+        border-radius:10px;
+        margin-top:30px;
+        '>
+
+        {site}
+
+        </h2>
+
+        <table style='
+        width:100%;
+        border-collapse:collapse;
+        margin-bottom:30px;
+        '>
 
         <tr>
 
-        <td>
+        <th style='
+        background:#dfe7ff;
+        padding:15px;
+        border:1px solid #ccc;
+        '>
 
-        <a href="/bridge/{row['bridge']}">
+        橋一覧
 
-        {row['bridge']}
-
-        </a>
-
-        </td>
+        </th>
 
         </tr>
 
         """
+
+        site_df = df[df["site"] == site]
+
+        for i,row in site_df.iterrows():
+
+            html += f"""
+
+            <tr>
+
+            <td style='
+            border:1px solid #ccc;
+            padding:15px;
+            text-align:center;
+            '>
+
+            <a href="/bridge/{row['bridge']}"
+            style='
+            text-decoration:none;
+            color:#1f3c88;
+            font-weight:bold;
+            font-size:22px;
+            '>
+
+            {row['bridge']}
+
+            </a>
+
+            </td>
+
+            </tr>
+
+            """
+
+        html += "</table>"
 
     return f"""
 
@@ -569,29 +687,6 @@ def list_page():
         border-radius:20px;
     }}
 
-    table{{
-        width:100%;
-        border-collapse:collapse;
-    }}
-
-    th,td{{
-        border:1px solid #ccc;
-        padding:15px;
-        text-align:center;
-    }}
-
-    th{{
-        background:#1f3c88;
-        color:white;
-    }}
-
-    a{{
-        text-decoration:none;
-        color:#1f3c88;
-        font-weight:bold;
-        font-size:22px;
-    }}
-
     .back{{
         display:inline-block;
         margin-bottom:20px;
@@ -615,15 +710,7 @@ def list_page():
     戻る
     </a>
 
-    <table>
-
-    <tr>
-    <th>橋一覧</th>
-    </tr>
-
-    {rows}
-
-    </table>
+    {html}
 
     </div>
 
