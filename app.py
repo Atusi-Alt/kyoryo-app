@@ -269,7 +269,7 @@ function updateBridge(){
 
 function updateProcess(){
 
-    const place = document.getElementById("place").value
+    const part = document.getElementById("part").value
 
     const process = document.getElementById("process")
 
@@ -277,7 +277,7 @@ function updateProcess(){
 
     let list = []
 
-    if(place == "一種部"){
+    if(part == "一種部"){
 
         list = [
         "素地調整完了",
@@ -360,12 +360,21 @@ function init(){
 
 <label>箇所</label>
 
-<select id="place" name="place" onchange="updateProcess()">
+<select name="place">
 
 <option>上部工</option>
 <option>下部工</option>
 <option>上部工内面</option>
 <option>下部工内面</option>
+
+</select>
+
+<label>部位</label>
+
+<select id="part" name="part" onchange="updateProcess()">
+
+<option>一般部</option>
+<option>増し塗り部</option>
 <option>一種部</option>
 
 </select>
@@ -434,8 +443,11 @@ def home():
     if request.method == "POST":
 
         bridge = request.form["bridge"]
+        place = request.form["place"]
+        part = request.form["part"]
+        lot = request.form["lot"]
 
-        file_name = bridge + ".xlsx"
+        file_name = f"{bridge}_{place}_{part}_{lot}.xlsx"
 
         if os.path.exists(file_name):
 
@@ -450,6 +462,7 @@ def home():
                 "現場名",
                 "橋名",
                 "箇所",
+                "部位",
                 "ロット番号",
                 "工程",
                 "膜厚"
@@ -463,8 +476,9 @@ def home():
             "入力者":session["user"],
             "現場名":request.form["site"],
             "橋名":bridge,
-            "箇所":request.form["place"],
-            "ロット番号":request.form["lot"],
+            "箇所":place,
+            "部位":part,
+            "ロット番号":lot,
             "工程":request.form["process"],
             "膜厚":request.form["thickness"]
         }
@@ -593,163 +607,6 @@ def list_page():
     </html>
 
     """
-
-@app.route("/view/<filename>")
-def view(filename):
-
-    if "login" not in session:
-        return redirect("/")
-
-    df = pd.read_excel(filename)
-
-    rows = ""
-
-    for i,row in df.iterrows():
-
-        rows += f"""
-
-        <tr>
-
-        <td>{row['No']}</td>
-        <td>{row['日時']}</td>
-        <td>{row['入力者']}</td>
-        <td>{row['現場名']}</td>
-        <td>{row['橋名']}</td>
-        <td>{row['箇所']}</td>
-        <td>{row['ロット番号']}</td>
-        <td>{row['工程']}</td>
-        <td>{row['膜厚']}</td>
-
-        <td>
-
-        <a href='/delete/{filename}/{row["No"]}'>
-
-        削除
-
-        </a>
-
-        </td>
-
-        </tr>
-
-        """
-
-    return f"""
-
-    <!DOCTYPE html>
-
-    <html lang='ja'>
-
-    <head>
-
-    <meta charset='UTF-8'>
-
-    <style>
-
-    body{{
-        background:#eef2f7;
-        font-family:Arial;
-        padding:20px;
-    }}
-
-    .box{{
-        background:white;
-        padding:20px;
-        border-radius:20px;
-    }}
-
-    table{{
-        width:100%;
-        border-collapse:collapse;
-        font-size:14px;
-    }}
-
-    th,td{{
-        border:1px solid #ccc;
-        padding:10px;
-        text-align:center;
-    }}
-
-    th{{
-        background:#1f3c88;
-        color:white;
-    }}
-
-    .back{{
-        display:inline-block;
-        margin-bottom:20px;
-        background:#1f3c88;
-        color:white;
-        padding:12px 20px;
-        border-radius:10px;
-        text-decoration:none;
-    }}
-
-    .delete{{
-        background:red;
-        color:white;
-        padding:8px 12px;
-        border-radius:8px;
-        text-decoration:none;
-        font-weight:bold;
-    }}
-
-    </style>
-
-    </head>
-
-    <body>
-
-    <div class='box'>
-
-    <a class='back' href='/list'>
-    戻る
-    </a>
-
-    <h2>{filename}</h2>
-
-    <table>
-
-    <tr>
-
-    <th>No</th>
-    <th>日時</th>
-    <th>入力者</th>
-    <th>現場名</th>
-    <th>橋名</th>
-    <th>箇所</th>
-    <th>ロット番号</th>
-    <th>工程</th>
-    <th>膜厚</th>
-    <th>操作</th>
-
-    </tr>
-
-    {rows}
-
-    </table>
-
-    </div>
-
-    </body>
-
-    </html>
-
-    """
-
-@app.route("/delete/<filename>/<int:no>")
-def delete_data(filename,no):
-
-    if "login" not in session:
-        return redirect("/")
-
-    df = pd.read_excel(filename)
-
-    df = df[df["No"] != no]
-
-    df.to_excel(filename,index=False)
-
-    return redirect(f"/view/{filename}")
 
 if __name__ == "__main__":
     app.run(debug=False)
