@@ -276,6 +276,7 @@ def login():
     if request.method == "POST":
 
         users = {
+            "敦司":"6788",
             "furui":"6788",
             "tsuchiya":"6788",
             "akashi":"6788",
