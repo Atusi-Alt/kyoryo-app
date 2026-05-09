@@ -176,6 +176,13 @@ button{
     font-weight:bold;
 }
 
+.user{
+    text-align:right;
+    font-weight:bold;
+    margin-bottom:15px;
+    color:#1f3c88;
+}
+
 </style>
 
 </head>
@@ -188,12 +195,17 @@ button{
 
 <div class="container">
 
+<div class="user">
+ログイン中：{user}
+</div>
+
 <form method="POST">
 
 <label>現場名</label>
 <input name="site" required>
 
 <label>橋名</label>
+
 <select name="bridge">
 
 <option>I 1-286</option>
@@ -205,6 +217,7 @@ button{
 </select>
 
 <label>箇所</label>
+
 <select name="place">
 
 <option>上部工</option>
@@ -222,6 +235,7 @@ button{
 <input name="lot">
 
 <label>工程</label>
+
 <select name="process">
 
 <option>素地調整完了</option>
@@ -261,9 +275,20 @@ def login():
 
     if request.method == "POST":
 
-        if request.form["id"] == "admin" and request.form["pw"] == "Sakura6788":
+        users = {
+            "furui":"6788",
+            "tsuchiya":"6788",
+            "akashi":"6788",
+            "kawano":"6788"
+        }
+
+        user_id = request.form["id"]
+        user_pw = request.form["pw"]
+
+        if user_id in users and users[user_id] == user_pw:
 
             session["login"] = True
+            session["user"] = user_id
 
             return redirect("/home")
 
@@ -289,6 +314,7 @@ def home():
         file_name = bridge + ".xlsx"
 
         data = {
+            "入力者":[session["user"]],
             "現場名":[request.form["site"]],
             "橋名":[bridge],
             "箇所":[request.form["place"]],
@@ -310,7 +336,11 @@ def home():
 
         message = "<div class='success'>入力完了！</div>"
 
-    return render_template_string(html, message=message)
+    return render_template_string(
+        html,
+        message=message,
+        user=session["user"]
+    )
 
 if __name__ == "__main__":
     app.run(debug=False)
