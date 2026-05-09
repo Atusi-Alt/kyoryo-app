@@ -28,6 +28,7 @@ bridge TEXT,
 place TEXT,
 part TEXT,
 lot TEXT,
+point TEXT,
 process TEXT,
 thickness TEXT
 
@@ -345,7 +346,39 @@ function init(){
 </select>
 
 <label>ロット番号</label>
-<input name="lot">
+<input type="number" name="lot">
+
+<label>測点</label>
+
+<select name="point">
+
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+<option>13</option>
+<option>14</option>
+<option>15</option>
+<option>16</option>
+<option>17</option>
+<option>18</option>
+<option>19</option>
+<option>20</option>
+<option>21</option>
+<option>22</option>
+<option>23</option>
+<option>24</option>
+<option>25</option>
+
+</select>
 
 <label>工程</label>
 
@@ -362,7 +395,7 @@ function init(){
 </select>
 
 <label>膜厚</label>
-<input name="thickness">
+<input type="number" name="thickness">
 
 <button type="submit">
 保存
@@ -438,12 +471,13 @@ def home():
         place,
         part,
         lot,
+        point,
         process,
         thickness
 
         )
 
-        VALUES (?,?,?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?,?)
 
         """, (
 
@@ -454,6 +488,7 @@ def home():
         request.form["place"],
         request.form["part"],
         request.form["lot"],
+        request.form["point"],
         request.form["process"],
         request.form["thickness"]
 
@@ -468,7 +503,7 @@ def home():
     )
 
 # =====================================
-# 入力情報一覧
+# 一覧
 # =====================================
 
 @app.route("/list")
@@ -617,7 +652,8 @@ def bridge_page(bridge):
 
     ORDER BY
     part,
-    CAST(lot as INTEGER)
+    CAST(lot as INTEGER),
+    CAST(point as INTEGER)
 
     """
 
@@ -649,14 +685,24 @@ def bridge_page(bridge):
 
             html += f"""
 
-            <h3 style='color:#1f3c88;'>
-            {lot}ロット
-            </h3>
+            <details style='margin-bottom:20px;'>
 
-            <table style='width:100%;border-collapse:collapse;margin-bottom:30px;'>
+            <summary style='
+            font-size:24px;
+            font-weight:bold;
+            color:#1f3c88;
+            cursor:pointer;
+            '>
+
+            {lot}ロット
+
+            </summary>
+
+            <table style='width:100%;border-collapse:collapse;margin-top:15px;margin-bottom:30px;'>
 
             <tr style='background:#dfe7ff;'>
 
+            <th>測点</th>
             <th>日時</th>
             <th>入力者</th>
             <th>箇所</th>
@@ -674,6 +720,7 @@ def bridge_page(bridge):
 
                 <tr>
 
+                <td>{row['point']}</td>
                 <td>{row['datetime']}</td>
                 <td>{row['user']}</td>
                 <td>{row['place']}</td>
@@ -699,7 +746,13 @@ def bridge_page(bridge):
 
                 """
 
-            html += "</table>"
+            html += """
+
+            </table>
+
+            </details>
+
+            """
 
     return f"""
 
