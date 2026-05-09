@@ -1,27 +1,60 @@
 from flask import Flask, request, render_template_string, redirect, session
+import sqlite3
 import pandas as pd
-import os
 from datetime import datetime
 
 app = Flask(__name__)
 
 app.secret_key = "Sakura6788"
 
-# =========================
-# ログインユーザー
-# =========================
+# ==================================
+# SQLite データベース作成
+# ==================================
+
+conn = sqlite3.connect("database.db")
+
+cursor = conn.cursor()
+
+cursor.execute("""
+
+CREATE TABLE IF NOT EXISTS data (
+
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+datetime TEXT,
+user TEXT,
+site TEXT,
+bridge TEXT,
+place TEXT,
+part TEXT,
+lot TEXT,
+process TEXT,
+thickness TEXT
+
+)
+
+""")
+
+conn.commit()
+conn.close()
+
+# ==================================
+# ユーザー
+# ==================================
 
 users = {
+
     "敦司":"6788",
     "furui":"6788",
     "tsuchiya":"6788",
     "akashi":"6788",
     "kawano":"6788"
+
 }
 
-# =========================
+# ==================================
 # 橋データ
-# =========================
+# ==================================
 
 bridges = {
 
@@ -56,11 +89,12 @@ bridges = {
         "Ⅱ-146",
         "Ⅱ-147"
     ]
+
 }
 
-# =========================
+# ==================================
 # ログイン画面
-# =========================
+# ==================================
 
 login_html = """
 
@@ -155,9 +189,9 @@ button{
 
 """
 
-# =========================
+# ==================================
 # ホーム画面
-# =========================
+# ==================================
 
 home_html = """
 
@@ -187,7 +221,7 @@ body{
     color:white;
     text-align:center;
     padding:20px;
-    font-size:32px;
+    font-size:30px;
     font-weight:bold;
 }
 
@@ -427,9 +461,9 @@ function init(){
 
 """
 
-# =========================
-# ログイン処理
-# =========================
+# ==================================
+# ログイン
+# ==================================
 
 @app.route("/", methods=["GET","POST"])
 def login():
@@ -454,9 +488,9 @@ def login():
 
     return render_template_string(login_html, error=error)
 
-# =========================
+# ==================================
 # ホーム
-# =========================
+# ==================================
 
 @app.route("/home", methods=["GET","POST"])
 def home():
@@ -468,50 +502,44 @@ def home():
 
     if request.method == "POST":
 
-        bridge = request.form["bridge"]
-        place = request.form["place"]
-        part = request.form["part"]
-        lot = request.form["lot"]
+        conn = sqlite3.connect("database.db")
 
-        file_name = f"{bridge}_{place}_{part}_{lot}.xlsx"
+        cursor = conn.cursor()
 
-        if os.path.exists(file_name):
+        cursor.execute("""
 
-            df = pd.read_excel(file_name)
+        INSERT INTO data (
 
-        else:
+        datetime,
+        user,
+        site,
+        bridge,
+        place,
+        part,
+        lot,
+        process,
+        thickness
 
-            df = pd.DataFrame(columns=[
-                "No",
-                "日時",
-                "入力者",
-                "現場名",
-                "橋名",
-                "箇所",
-                "部位",
-                "ロット番号",
-                "工程",
-                "膜厚"
-            ])
+        )
 
-        no = len(df) + 1
+        VALUES (?,?,?,?,?,?,?,?,?)
 
-        new_row = {
-            "No":no,
-            "日時":datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "入力者":session["user"],
-            "現場名":request.form["site"],
-            "橋名":bridge,
-            "箇所":place,
-            "部位":part,
-            "ロット番号":lot,
-            "工程":request.form["process"],
-            "膜厚":request.form["thickness"]
-        }
+        """, (
 
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        datetime.now().strftime("%Y-%m-%d %H:%M"),
+        session["user"],
+        request.form["site"],
+        request.form["bridge"],
+        request.form["place"],
+        request.form["part"],
+        request.form["lot"],
+        request.form["process"],
+        request.form["thickness"]
 
-        df.to_excel(file_name, index=False)
+        ))
+
+        conn.commit()
+        conn.close()
 
         message = "<div class='success'>保存完了</div>"
 
@@ -522,9 +550,9 @@ def home():
         message=message
     )
 
-# =========================
-# ファイル一覧
-# =========================
+# ==================================
+# 一覧
+# ==================================
 
 @app.route("/list")
 def list_page():
@@ -532,11 +560,31 @@ def list_page():
     if "login" not in session:
         return redirect("/")
 
-    files = [f for f in os.listdir() if f.endswith(".xlsx")]
+    conn = sqlite3.connect("database.db")
+
+    df = pd.read_sql_query("""
+
+    SELECT DISTINCT
+    bridge,
+    place,
+    part,
+    lot
+
+    FROM data
+
+    ORDER BY bridge
+
+    """, conn)
+
+    conn.close()
 
     rows = ""
 
-    for file in files:
+    for i,row in df.iterrows():
+
+        link = f"/view/{row['bridge']}/{row['place']}/{row['part']}/{row['lot']}"
+
+        name = f"{row['bridge']} / {row['place']} / {row['part']} / {row['lot']}ロット"
 
         rows += f"""
 
@@ -544,9 +592,9 @@ def list_page():
 
         <td>
 
-        <a href='/view/{file}'>
+        <a href="{link}">
 
-        {file}
+        {name}
 
         </a>
 
@@ -627,7 +675,7 @@ def list_page():
     <table>
 
     <tr>
-    <th>保存ファイル</th>
+    <th>保存データ</th>
     </tr>
 
     {rows}
@@ -642,17 +690,35 @@ def list_page():
 
     """
 
-# =========================
+# ==================================
 # 詳細表示
-# =========================
+# ==================================
 
-@app.route("/view/<filename>")
-def view(filename):
+@app.route("/view/<bridge>/<place>/<part>/<lot>")
+def view(bridge,place,part,lot):
 
     if "login" not in session:
         return redirect("/")
 
-    df = pd.read_excel(filename)
+    conn = sqlite3.connect("database.db")
+
+    query = f"""
+
+    SELECT *
+
+    FROM data
+
+    WHERE
+    bridge='{bridge}'
+    AND place='{place}'
+    AND part='{part}'
+    AND lot='{lot}'
+
+    """
+
+    df = pd.read_sql_query(query, conn)
+
+    conn.close()
 
     rows = ""
 
@@ -662,16 +728,16 @@ def view(filename):
 
         <tr>
 
-        <td>{row['No']}</td>
-        <td>{row['日時']}</td>
-        <td>{row['入力者']}</td>
-        <td>{row['現場名']}</td>
-        <td>{row['橋名']}</td>
-        <td>{row['箇所']}</td>
-        <td>{row['部位']}</td>
-        <td>{row['ロット番号']}</td>
-        <td>{row['工程']}</td>
-        <td>{row['膜厚']}</td>
+        <td>{row['id']}</td>
+        <td>{row['datetime']}</td>
+        <td>{row['user']}</td>
+        <td>{row['site']}</td>
+        <td>{row['bridge']}</td>
+        <td>{row['place']}</td>
+        <td>{row['part']}</td>
+        <td>{row['lot']}</td>
+        <td>{row['process']}</td>
+        <td>{row['thickness']}</td>
 
         </tr>
 
@@ -740,20 +806,22 @@ def view(filename):
     戻る
     </a>
 
-    <h2>{filename}</h2>
+    <h2>
+    {bridge} / {place} / {part} / {lot}ロット
+    </h2>
 
     <table>
 
     <tr>
 
-    <th>No</th>
+    <th>ID</th>
     <th>日時</th>
     <th>入力者</th>
     <th>現場名</th>
     <th>橋名</th>
     <th>箇所</th>
     <th>部位</th>
-    <th>ロット番号</th>
+    <th>ロット</th>
     <th>工程</th>
     <th>膜厚</th>
 
@@ -771,9 +839,9 @@ def view(filename):
 
     """
 
-# =========================
+# ==================================
 # 起動
-# =========================
+# ==================================
 
 if __name__ == "__main__":
     app.run(debug=False)
