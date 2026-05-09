@@ -7,9 +7,9 @@ app = Flask(__name__)
 
 app.secret_key = "Sakura6788"
 
-# ==================================
-# SQLite データベース作成
-# ==================================
+# =====================================
+# DB作成
+# =====================================
 
 conn = sqlite3.connect("database.db")
 
@@ -38,9 +38,9 @@ thickness TEXT
 conn.commit()
 conn.close()
 
-# ==================================
+# =====================================
 # ユーザー
-# ==================================
+# =====================================
 
 users = {
 
@@ -52,9 +52,9 @@ users = {
 
 }
 
-# ==================================
-# 橋データ
-# ==================================
+# =====================================
+# 橋
+# =====================================
 
 bridges = {
 
@@ -92,9 +92,9 @@ bridges = {
 
 }
 
-# ==================================
-# ログイン画面
-# ==================================
+# =====================================
+# ログイン
+# =====================================
 
 login_html = """
 
@@ -121,7 +121,6 @@ body{
     background:white;
     padding:30px;
     border-radius:20px;
-    box-shadow:0 0 15px rgba(0,0,0,0.1);
 }
 
 h1{
@@ -135,7 +134,6 @@ input{
     margin-top:15px;
     border-radius:10px;
     border:1px solid #ccc;
-    font-size:18px;
     box-sizing:border-box;
 }
 
@@ -151,12 +149,6 @@ button{
     font-weight:bold;
 }
 
-.error{
-    color:red;
-    text-align:center;
-    margin-top:15px;
-}
-
 </style>
 
 </head>
@@ -169,17 +161,15 @@ button{
 
 <form method="POST">
 
-<input name="id" placeholder="ID" required>
+<input name="id" placeholder="ID">
 
-<input type="password" name="pw" placeholder="パスワード" required>
+<input type="password" name="pw" placeholder="パスワード">
 
 <button type="submit">
 ログイン
 </button>
 
 </form>
-
-{{error|safe}}
 
 </div>
 
@@ -189,9 +179,9 @@ button{
 
 """
 
-# ==================================
-# ホーム画面
-# ==================================
+# =====================================
+# ホーム
+# =====================================
 
 home_html = """
 
@@ -211,7 +201,6 @@ home_html = """
 
 body{
     margin:0;
-    padding:0;
     background:#eef2f7;
     font-family:Arial;
 }
@@ -231,7 +220,6 @@ body{
     background:white;
     padding:25px;
     border-radius:20px;
-    box-shadow:0 0 15px rgba(0,0,0,0.1);
 }
 
 label{
@@ -246,7 +234,6 @@ input,select{
     margin-top:5px;
     border-radius:10px;
     border:1px solid #ccc;
-    font-size:18px;
     box-sizing:border-box;
 }
 
@@ -272,23 +259,6 @@ button{
     text-decoration:none;
     color:#1f3c88;
     font-weight:bold;
-}
-
-.success{
-    background:#d4edda;
-    color:#155724;
-    padding:15px;
-    margin-top:20px;
-    border-radius:10px;
-    text-align:center;
-    font-weight:bold;
-}
-
-.user{
-    text-align:right;
-    font-weight:bold;
-    color:#1f3c88;
-    margin-bottom:20px;
 }
 
 </style>
@@ -319,63 +289,9 @@ function updateBridge(){
 
 }
 
-function updateProcess(){
-
-    const part = document.getElementById("part").value
-
-    const process = document.getElementById("process")
-
-    process.innerHTML = ""
-
-    let list = []
-
-    if(part == "一種部"){
-
-        list = [
-        "素地調整完了",
-        "防食下地",
-        "下塗1",
-        "下塗2",
-        "増し塗1",
-        "増し塗2",
-        "中塗り",
-        "上塗り"
-        ]
-
-    }
-
-    else{
-
-        list = [
-        "補修塗",
-        "下塗1",
-        "増し塗1",
-        "増し塗2",
-        "下塗2",
-        "中塗り",
-        "上塗り"
-        ]
-
-    }
-
-    list.forEach(function(item){
-
-        let option = document.createElement("option")
-
-        option.text = item
-
-        option.value = item
-
-        process.add(option)
-
-    })
-
-}
-
 function init(){
 
     updateBridge()
-    updateProcess()
 
 }
 
@@ -390,10 +306,6 @@ function init(){
 </div>
 
 <div class="container">
-
-<div class="user">
-ログイン中：{{user}}
-</div>
 
 <form method="POST">
 
@@ -423,7 +335,7 @@ function init(){
 
 <label>部位</label>
 
-<select id="part" name="part" onchange="updateProcess()">
+<select name="part">
 
 <option>一般部</option>
 <option>増し塗り部</option>
@@ -432,14 +344,24 @@ function init(){
 </select>
 
 <label>ロット番号</label>
-<input name="lot" required>
+<input name="lot">
 
 <label>工程</label>
 
-<select id="process" name="process"></select>
+<select name="process">
 
-<label>膜厚（μm）</label>
-<input name="thickness" required>
+<option>補修塗</option>
+<option>下塗1</option>
+<option>増し塗1</option>
+<option>増し塗2</option>
+<option>下塗2</option>
+<option>中塗り</option>
+<option>上塗り</option>
+
+</select>
+
+<label>膜厚</label>
+<input name="thickness">
 
 <button type="submit">
 保存
@@ -448,14 +370,12 @@ function init(){
 </form>
 
 <a class="link" href="/list">
-入力データ確認
+橋一覧
 </a>
 
 <a class="link" href="/backup">
-データバックアップ
+バックアップ
 </a>
-
-{{message|safe}}
 
 </div>
 
@@ -465,14 +385,12 @@ function init(){
 
 """
 
-# ==================================
+# =====================================
 # ログイン
-# ==================================
+# =====================================
 
 @app.route("/", methods=["GET","POST"])
 def login():
-
-    error = ""
 
     if request.method == "POST":
 
@@ -482,27 +400,20 @@ def login():
         if user_id in users and users[user_id] == user_pw:
 
             session["login"] = True
-            session["user"] = user_id
 
             return redirect("/home")
 
-        else:
+    return render_template_string(login_html)
 
-            error = "<div class='error'>ログイン失敗</div>"
-
-    return render_template_string(login_html, error=error)
-
-# ==================================
+# =====================================
 # ホーム
-# ==================================
+# =====================================
 
 @app.route("/home", methods=["GET","POST"])
 def home():
 
     if "login" not in session:
         return redirect("/")
-
-    message = ""
 
     if request.method == "POST":
 
@@ -531,7 +442,7 @@ def home():
         """, (
 
         datetime.now().strftime("%Y-%m-%d %H:%M"),
-        session["user"],
+        "敦司",
         request.form["site"],
         request.form["bridge"],
         request.form["place"],
@@ -545,34 +456,23 @@ def home():
         conn.commit()
         conn.close()
 
-        message = "<div class='success'>保存完了</div>"
-
     return render_template_string(
         home_html,
-        bridges=bridges,
-        user=session["user"],
-        message=message
+        bridges=bridges
     )
 
-# ==================================
-# 一覧
-# ==================================
+# =====================================
+# 橋一覧
+# =====================================
 
 @app.route("/list")
 def list_page():
-
-    if "login" not in session:
-        return redirect("/")
 
     conn = sqlite3.connect("database.db")
 
     df = pd.read_sql_query("""
 
-    SELECT DISTINCT
-    bridge,
-    place,
-    part,
-    lot
+    SELECT DISTINCT bridge
 
     FROM data
 
@@ -586,19 +486,15 @@ def list_page():
 
     for i,row in df.iterrows():
 
-        link = f"/view/{row['bridge']}/{row['place']}/{row['part']}/{row['lot']}"
-
-        name = f"{row['bridge']} / {row['place']} / {row['part']} / {row['lot']}ロット"
-
         rows += f"""
 
         <tr>
 
         <td>
 
-        <a href="{link}">
+        <a href="/bridge/{row['bridge']}">
 
-        {name}
+        {row['bridge']}
 
         </a>
 
@@ -639,7 +535,7 @@ def list_page():
 
     th,td{{
         border:1px solid #ccc;
-        padding:12px;
+        padding:15px;
         text-align:center;
     }}
 
@@ -652,16 +548,7 @@ def list_page():
         text-decoration:none;
         color:#1f3c88;
         font-weight:bold;
-    }}
-
-    .back{{
-        display:inline-block;
-        margin-bottom:20px;
-        background:#1f3c88;
-        color:white;
-        padding:12px 20px;
-        border-radius:10px;
-        text-decoration:none;
+        font-size:22px;
     }}
 
     </style>
@@ -672,14 +559,10 @@ def list_page():
 
     <div class='box'>
 
-    <a class='back' href='/home'>
-    戻る
-    </a>
-
     <table>
 
     <tr>
-    <th>保存データ</th>
+    <th>橋一覧</th>
     </tr>
 
     {rows}
@@ -694,15 +577,12 @@ def list_page():
 
     """
 
-# ==================================
-# 詳細表示
-# ==================================
+# =====================================
+# 橋詳細
+# =====================================
 
-@app.route("/view/<bridge>/<place>/<part>/<lot>")
-def view(bridge,place,part,lot):
-
-    if "login" not in session:
-        return redirect("/")
+@app.route("/bridge/<bridge>")
+def bridge_page(bridge):
 
     conn = sqlite3.connect("database.db")
 
@@ -712,11 +592,11 @@ def view(bridge,place,part,lot):
 
     FROM data
 
-    WHERE
-    bridge='{bridge}'
-    AND place='{place}'
-    AND part='{part}'
-    AND lot='{lot}'
+    WHERE bridge='{bridge}'
+
+    ORDER BY
+    part,
+    CAST(lot as INTEGER)
 
     """
 
@@ -724,28 +604,65 @@ def view(bridge,place,part,lot):
 
     conn.close()
 
-    rows = ""
+    html = ""
 
-    for i,row in df.iterrows():
+    parts = ["一般部","増し塗り部","一種部"]
 
-        rows += f"""
+    for part in parts:
 
-        <tr>
+        html += f"""
 
-        <td>{row['id']}</td>
-        <td>{row['datetime']}</td>
-        <td>{row['user']}</td>
-        <td>{row['site']}</td>
-        <td>{row['bridge']}</td>
-        <td>{row['place']}</td>
-        <td>{row['part']}</td>
-        <td>{row['lot']}</td>
-        <td>{row['process']}</td>
-        <td>{row['thickness']}</td>
-
-        </tr>
+        <h2 style='background:#1f3c88;color:white;padding:15px;border-radius:10px;'>
+        {part}
+        </h2>
 
         """
+
+        part_df = df[df["part"] == part]
+
+        lots = part_df["lot"].unique()
+
+        for lot in lots:
+
+            lot_df = part_df[part_df["lot"] == lot]
+
+            html += f"""
+
+            <h3 style='color:#1f3c88;'>
+            {lot}ロット
+            </h3>
+
+            <table style='width:100%;border-collapse:collapse;margin-bottom:30px;'>
+
+            <tr style='background:#dfe7ff;'>
+
+            <th>ID</th>
+            <th>日時</th>
+            <th>箇所</th>
+            <th>工程</th>
+            <th>膜厚</th>
+
+            </tr>
+
+            """
+
+            for i,row in lot_df.iterrows():
+
+                html += f"""
+
+                <tr>
+
+                <td>{row['id']}</td>
+                <td>{row['datetime']}</td>
+                <td>{row['place']}</td>
+                <td>{row['process']}</td>
+                <td>{row['thickness']}</td>
+
+                </tr>
+
+                """
+
+            html += "</table>"
 
     return f"""
 
@@ -771,31 +688,13 @@ def view(bridge,place,part,lot):
         border-radius:20px;
     }}
 
-    table{{
-        width:100%;
-        border-collapse:collapse;
-        font-size:14px;
+    table,th,td{{
+        border:1px solid #ccc;
     }}
 
     th,td{{
-        border:1px solid #ccc;
         padding:10px;
         text-align:center;
-    }}
-
-    th{{
-        background:#1f3c88;
-        color:white;
-    }}
-
-    .back{{
-        display:inline-block;
-        margin-bottom:20px;
-        background:#1f3c88;
-        color:white;
-        padding:12px 20px;
-        border-radius:10px;
-        text-decoration:none;
     }}
 
     </style>
@@ -806,34 +705,11 @@ def view(bridge,place,part,lot):
 
     <div class='box'>
 
-    <a class='back' href='/list'>
-    戻る
-    </a>
+    <h1>
+    {bridge}
+    </h1>
 
-    <h2>
-    {bridge} / {place} / {part} / {lot}ロット
-    </h2>
-
-    <table>
-
-    <tr>
-
-    <th>ID</th>
-    <th>日時</th>
-    <th>入力者</th>
-    <th>現場名</th>
-    <th>橋名</th>
-    <th>箇所</th>
-    <th>部位</th>
-    <th>ロット</th>
-    <th>工程</th>
-    <th>膜厚</th>
-
-    </tr>
-
-    {rows}
-
-    </table>
+    {html}
 
     </div>
 
@@ -843,24 +719,21 @@ def view(bridge,place,part,lot):
 
     """
 
-# ==================================
+# =====================================
 # バックアップ
-# ==================================
+# =====================================
 
 @app.route("/backup")
 def backup():
-
-    if "login" not in session:
-        return redirect("/")
 
     return send_file(
         "database.db",
         as_attachment=True
     )
 
-# ==================================
+# =====================================
 # 起動
-# ==================================
+# =====================================
 
 if __name__ == "__main__":
     app.run(debug=False)
