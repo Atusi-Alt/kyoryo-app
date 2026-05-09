@@ -1,8 +1,102 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, redirect, session
 import pandas as pd
 import os
 
 app = Flask(__name__)
+
+app.secret_key = "Sakura6788"
+
+login_html = """
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>ログイン</title>
+
+<style>
+
+body{
+    background:#eef2f7;
+    font-family:Arial;
+}
+
+.box{
+    width:350px;
+    margin:120px auto;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 0 15px rgba(0,0,0,0.1);
+}
+
+h1{
+    text-align:center;
+    color:#1f3c88;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:18px;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:20px;
+    border:none;
+    border-radius:10px;
+    background:#1f3c88;
+    color:white;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.error{
+    color:red;
+    text-align:center;
+    margin-top:15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>橋梁膜厚管理</h1>
+
+<form method="POST">
+
+<input name="id" placeholder="ID" required>
+
+<input type="password" name="pw" placeholder="パスワード" required>
+
+<button type="submit">
+ログイン
+</button>
+
+</form>
+
+{error}
+
+</div>
+
+</body>
+
+</html>
+
+"""
 
 html = """
 
@@ -12,6 +106,7 @@ html = """
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>橋梁膜厚管理</title>
@@ -30,7 +125,7 @@ body{
     color:white;
     text-align:center;
     padding:20px;
-    font-size:34px;
+    font-size:32px;
     font-weight:bold;
 }
 
@@ -45,15 +140,14 @@ body{
 
 label{
     display:block;
-    margin-top:18px;
-    margin-bottom:8px;
-    font-size:18px;
+    margin-top:15px;
     font-weight:bold;
 }
 
-input, select{
+input,select{
     width:100%;
-    padding:14px;
+    padding:12px;
+    margin-top:5px;
     border-radius:10px;
     border:1px solid #ccc;
     font-size:18px;
@@ -62,13 +156,13 @@ input, select{
 
 button{
     width:100%;
-    margin-top:30px;
-    padding:16px;
+    padding:15px;
+    margin-top:25px;
     border:none;
-    border-radius:12px;
+    border-radius:10px;
     background:#1f3c88;
     color:white;
-    font-size:24px;
+    font-size:22px;
     font-weight:bold;
 }
 
@@ -76,182 +170,41 @@ button{
     background:#d4edda;
     color:#155724;
     padding:15px;
+    margin-top:20px;
     border-radius:10px;
-    margin-bottom:20px;
     text-align:center;
-    font-size:18px;
-    font-weight:bold;
-}
-
-.link{
-    display:block;
-    margin-top:25px;
-    text-align:center;
-    background:#dfe7ff;
-    padding:15px;
-    border-radius:12px;
-    text-decoration:none;
-    color:#1f3c88;
-    font-size:20px;
     font-weight:bold;
 }
 
 </style>
 
-<script>
-
-const bridges = {
-
-"ミカドR6-1":[
-"I 1-286",
-"I 2-286",
-"I 1-287",
-"I 2-287",
-"I 1-290",
-"I 2-290",
-"I 1-291",
-"I 2-291",
-"I-287",
-"I-288",
-"I-289",
-"I-290",
-"I-291",
-"I-292"
-],
-
-"ミカドR6-2":[
-"Ⅱ 1-144",
-"Ⅱ 2-144",
-"入-144",
-"Ⅱ 1-145",
-"Ⅱ 2-145",
-"入-145",
-"Ⅱ 1-146",
-"Ⅱ 2-146",
-"入-146",
-"Ⅱ-145",
-"Ⅱ-146",
-"Ⅱ-147"
-]
-
-};
-
-function updateBridge(){
-
-    let site = document.getElementById("site").value;
-
-    let bridge = document.getElementById("bridge");
-
-    bridge.innerHTML = "";
-
-    for(let i=0;i<bridges[site].length;i++){
-
-        let option = document.createElement("option");
-
-        option.text = bridges[site][i];
-
-        option.value = bridges[site][i];
-
-        bridge.add(option);
-
-    }
-
-}
-
-function updateProcess(){
-
-    let section = document.getElementById("section").value;
-
-    let process = document.getElementById("process");
-
-    process.innerHTML = "";
-
-    let list = [];
-
-    if(section == "一種部"){
-
-        list = [
-        "素地調整完了",
-        "防食下地",
-        "下塗1",
-        "下塗2",
-        "増し塗1",
-        "増し塗2",
-        "中塗り",
-        "上塗り"
-        ];
-
-    }
-
-    else{
-
-        list = [
-        "補修塗",
-        "下塗1",
-        "増し塗1",
-        "増し塗2",
-        "下塗2",
-        "中塗り",
-        "上塗り"
-        ];
-
-    }
-
-    for(let i=0;i<list.length;i++){
-
-        let option = document.createElement("option");
-
-        option.text = list[i];
-
-        option.value = list[i];
-
-        process.add(option);
-
-    }
-
-}
-
-function init(){
-
-    updateBridge();
-
-    updateProcess();
-
-}
-
-</script>
-
 </head>
 
-<body onload="init()">
+<body>
 
 <div class="header">
-橋梁膜厚管理システム
+橋梁膜厚管理
 </div>
 
 <div class="container">
 
-{{message|safe}}
-
 <form method="POST">
 
 <label>現場名</label>
-
-<select id="site" name="site" onchange="updateBridge()">
-
-<option>ミカドR6-1</option>
-<option>ミカドR6-2</option>
-
-</select>
+<input name="site" required>
 
 <label>橋名</label>
+<select name="bridge">
 
-<select id="bridge" name="bridge">
+<option>I 1-286</option>
+<option>I 2-286</option>
+<option>I 1-287</option>
+<option>I 2-287</option>
+<option>I-287</option>
 
 </select>
 
 <label>箇所</label>
-
 <select name="place">
 
 <option>上部工</option>
@@ -263,26 +216,27 @@ function init(){
 </select>
 
 <label>部位</label>
-
-<select id="section" name="section" onchange="updateProcess()">
-
-<option>一般部</option>
-<option>増し塗部</option>
-<option>一種部</option>
-
-</select>
+<input name="section">
 
 <label>ロット番号</label>
-<input name="lot" required>
+<input name="lot">
 
 <label>工程</label>
+<select name="process">
 
-<select id="process" name="process">
+<option>素地調整完了</option>
+<option>防食下地</option>
+<option>下塗1</option>
+<option>下塗2</option>
+<option>増し塗1</option>
+<option>増し塗2</option>
+<option>中塗り</option>
+<option>上塗り</option>
 
 </select>
 
-<label>膜厚（μm）</label>
-<input name="thickness" required>
+<label>膜厚</label>
+<input name="thickness">
 
 <button type="submit">
 保存
@@ -290,9 +244,7 @@ function init(){
 
 </form>
 
-<a class="link" href="/list">
-入力データ一覧
-</a>
+{message}
 
 </div>
 
@@ -303,8 +255,30 @@ function init(){
 """
 
 @app.route("/", methods=["GET","POST"])
+def login():
 
+    error = ""
+
+    if request.method == "POST":
+
+        if request.form["id"] == "admin" and request.form["pw"] == "Sakura6788":
+
+            session["login"] = True
+
+            return redirect("/home")
+
+        else:
+
+            error = "<div class='error'>ログイン失敗</div>"
+
+    return render_template_string(login_html, error=error)
+
+@app.route("/home", methods=["GET","POST"])
 def home():
+
+    if "login" not in session:
+
+        return redirect("/")
 
     message = ""
 
@@ -337,88 +311,6 @@ def home():
         message = "<div class='success'>入力完了！</div>"
 
     return render_template_string(html, message=message)
-
-@app.route("/list")
-
-def list_data():
-
-    files = [f for f in os.listdir() if f.endswith(".xlsx")]
-
-    text = ""
-
-    for file in files:
-
-        text += f"<li>{file}</li>"
-
-    return f"""
-
-    <html>
-
-    <head>
-
-    <meta charset='UTF-8'>
-
-    <style>
-
-    body{{
-        background:#eef2f7;
-        font-family:Arial;
-        padding:30px;
-    }}
-
-    .box{{
-        background:white;
-        padding:30px;
-        border-radius:20px;
-    }}
-
-    li{{
-        font-size:22px;
-        margin-bottom:10px;
-    }}
-
-    a{{
-        display:inline-block;
-        margin-bottom:20px;
-        background:#1f3c88;
-        color:white;
-        padding:12px 20px;
-        border-radius:10px;
-        text-decoration:none;
-        font-weight:bold;
-    }}
-
-    </style>
-
-    </head>
-
-    <body>
-
-    <div class='box'>
-
-    <a href='/'>
-    戻る
-    </a>
-
-    <h1>保存ファイル一覧</h1>
-
-    <ul>
-
-    {text}
-
-    </ul>
-
-    </div>
-
-    </body>
-
-    </html>
-
-    """
-
-@app.route("/", methods=["GET", "POST"])
-def home():
-    return render_template_string(html)
 
 if __name__ == "__main__":
     app.run(debug=False)
