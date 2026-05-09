@@ -12,7 +12,9 @@ login_html = """
 <html lang="ja">
 
 <head>
+
 <meta charset="UTF-8">
+
 <title>ログイン</title>
 
 <style>
@@ -479,11 +481,29 @@ def list_data():
 
     for file in files:
 
-        rows += f"<tr><td>{file}</td></tr>"
+        rows += f"""
+
+        <tr>
+
+        <td>
+
+        <a href='/view/{file}'>
+
+        {file}
+
+        </a>
+
+        </td>
+
+        </tr>
+
+        """
 
     return f"""
 
-    <html>
+    <!DOCTYPE html>
+
+    <html lang='ja'>
 
     <head>
 
@@ -520,6 +540,12 @@ def list_data():
     }}
 
     a{{
+        text-decoration:none;
+        color:#1f3c88;
+        font-weight:bold;
+    }}
+
+    .back{{
         display:inline-block;
         margin-bottom:20px;
         background:#1f3c88;
@@ -538,7 +564,7 @@ def list_data():
 
     <div class='box'>
 
-    <a href='/home'>
+    <a class='back' href='/home'>
     戻る
     </a>
 
@@ -551,6 +577,97 @@ def list_data():
     {rows}
 
     </table>
+
+    </div>
+
+    </body>
+
+    </html>
+
+    """
+
+@app.route("/view/<filename>")
+def view_file(filename):
+
+    if "login" not in session:
+
+        return redirect("/")
+
+    df = pd.read_excel(filename)
+
+    table = df.to_html(
+        index=False,
+        classes="table"
+    )
+
+    return f"""
+
+    <!DOCTYPE html>
+
+    <html lang='ja'>
+
+    <head>
+
+    <meta charset='UTF-8'>
+
+    <style>
+
+    body{{
+        background:#eef2f7;
+        font-family:Arial;
+        padding:20px;
+    }}
+
+    .box{{
+        background:white;
+        padding:20px;
+        border-radius:20px;
+    }}
+
+    table{{
+        width:100%;
+        border-collapse:collapse;
+    }}
+
+    th{{
+        background:#1f3c88;
+        color:white;
+        padding:12px;
+        border:1px solid #ccc;
+    }}
+
+    td{{
+        padding:12px;
+        border:1px solid #ccc;
+        text-align:center;
+    }}
+
+    .back{{
+        display:inline-block;
+        margin-bottom:20px;
+        background:#1f3c88;
+        color:white;
+        padding:12px 20px;
+        border-radius:10px;
+        text-decoration:none;
+        font-weight:bold;
+    }}
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <div class='box'>
+
+    <a class='back' href='/list'>
+    戻る
+    </a>
+
+    <h2>{filename}</h2>
+
+    {table}
 
     </div>
 
