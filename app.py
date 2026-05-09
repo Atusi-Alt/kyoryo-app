@@ -202,7 +202,13 @@ button{
 <form method="POST">
 
 <label>現場名</label>
-<input name="site" required>
+
+<select name="site">
+
+<option>ミカドR6-1</option>
+<option>ミカドR6-2</option>
+
+</select>
 
 <label>橋名</label>
 
@@ -213,6 +219,11 @@ button{
 <option>I 1-287</option>
 <option>I 2-287</option>
 <option>I-287</option>
+<option>I-288</option>
+<option>I-289</option>
+<option>I-290</option>
+<option>I-291</option>
+<option>I-292</option>
 
 </select>
 
