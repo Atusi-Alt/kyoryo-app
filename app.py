@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string, redirect, session
+from flask import Flask, request, render_template_string, redirect, session, send_file
 import sqlite3
 import pandas as pd
 from datetime import datetime
@@ -451,6 +451,10 @@ function init(){
 入力データ確認
 </a>
 
+<a class="link" href="/backup">
+データバックアップ
+</a>
+
 {{message|safe}}
 
 </div>
@@ -838,6 +842,21 @@ def view(bridge,place,part,lot):
     </html>
 
     """
+
+# ==================================
+# バックアップ
+# ==================================
+
+@app.route("/backup")
+def backup():
+
+    if "login" not in session:
+        return redirect("/")
+
+    return send_file(
+        "database.db",
+        as_attachment=True
+    )
 
 # ==================================
 # 起動
