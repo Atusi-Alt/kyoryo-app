@@ -1,4 +1,3 @@
-```python
 from flask import Flask, request, render_template_string, redirect, session
 import pandas as pd
 import os
@@ -13,9 +12,7 @@ login_html = """
 <html lang="ja">
 
 <head>
-
 <meta charset="UTF-8">
-
 <title>ログイン</title>
 
 <style>
@@ -238,37 +235,37 @@ const bridges = {
 
 function updateBridge(){
 
-    let site = document.getElementById("site").value;
+    const site = document.getElementById("site").value;
 
-    let bridge = document.getElementById("bridge");
+    const bridge = document.getElementById("bridge");
 
     bridge.innerHTML = "";
 
-    for(let i=0;i<bridges[site].length;i++){
+    bridges[site].forEach(function(item){
 
         let option = document.createElement("option");
 
-        option.text = bridges[site][i];
+        option.text = item;
 
-        option.value = bridges[site][i];
+        option.value = item;
 
         bridge.add(option);
 
-    }
+    });
 
 }
 
 function updateProcess(){
 
-    let section = document.getElementById("section").value;
+    const place = document.getElementById("place").value;
 
-    let process = document.getElementById("process");
+    const process = document.getElementById("process");
 
     process.innerHTML = "";
 
     let list = [];
 
-    if(section == "一種部"){
+    if(place == "一種部"){
 
         list = [
         "素地調整完了",
@@ -297,24 +294,23 @@ function updateProcess(){
 
     }
 
-    for(let i=0;i<list.length;i++){
+    list.forEach(function(item){
 
         let option = document.createElement("option");
 
-        option.text = list[i];
+        option.text = item;
 
-        option.value = list[i];
+        option.value = item;
 
         process.add(option);
 
-    }
+    });
 
 }
 
 function init(){
 
     updateBridge();
-
     updateProcess();
 
 }
@@ -341,8 +337,8 @@ function init(){
 
 <select id="site" name="site" onchange="updateBridge()">
 
-<option>ミカドR6-1</option>
-<option>ミカドR6-2</option>
+<option value="ミカドR6-1">ミカドR6-1</option>
+<option value="ミカドR6-2">ミカドR6-2</option>
 
 </select>
 
@@ -354,22 +350,12 @@ function init(){
 
 <label>箇所</label>
 
-<select name="place">
+<select id="place" name="place" onchange="updateProcess()">
 
 <option>上部工</option>
 <option>下部工</option>
 <option>上部工内面</option>
 <option>下部工内面</option>
-<option>一種部</option>
-
-</select>
-
-<label>部位</label>
-
-<select id="section" name="section" onchange="updateProcess()">
-
-<option>一般部</option>
-<option>増し塗部</option>
 <option>一種部</option>
 
 </select>
@@ -393,7 +379,7 @@ function init(){
 </form>
 
 <a class="link" href="/list">
-入力データ一覧
+入力データ確認
 </a>
 
 {{message|safe}}
@@ -457,7 +443,6 @@ def home():
             "現場名":[request.form["site"]],
             "橋名":[bridge],
             "箇所":[request.form["place"]],
-            "部位":[request.form["section"]],
             "ロット番号":[request.form["lot"]],
             "工程":[request.form["process"]],
             "膜厚":[request.form["thickness"]]
@@ -490,11 +475,11 @@ def list_data():
 
     files = [f for f in os.listdir() if f.endswith(".xlsx")]
 
-    text = ""
+    rows = ""
 
     for file in files:
 
-        text += f"<li>{file}</li>"
+        rows += f"<tr><td>{file}</td></tr>"
 
     return f"""
 
@@ -518,9 +503,20 @@ def list_data():
         border-radius:20px;
     }}
 
-    li{{
-        font-size:22px;
-        margin-bottom:10px;
+    table{{
+        width:100%;
+        border-collapse:collapse;
+    }}
+
+    td,th{{
+        border:1px solid #ccc;
+        padding:12px;
+        text-align:center;
+    }}
+
+    th{{
+        background:#1f3c88;
+        color:white;
     }}
 
     a{{
@@ -546,13 +542,15 @@ def list_data():
     戻る
     </a>
 
-    <h1>保存ファイル一覧</h1>
+    <table>
 
-    <ul>
+    <tr>
+    <th>保存ファイル</th>
+    </tr>
 
-    {text}
+    {rows}
 
-    </ul>
+    </table>
 
     </div>
 
@@ -564,4 +562,3 @@ def list_data():
 
 if __name__ == "__main__":
     app.run(debug=False)
-```
