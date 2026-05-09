@@ -88,7 +88,7 @@ button{
 
 </form>
 
-{error}
+{{error|safe}}
 
 </div>
 
@@ -196,7 +196,7 @@ button{
 <div class="container">
 
 <div class="user">
-ログイン中：{user}
+ログイン中：{{user}}
 </div>
 
 <form method="POST">
@@ -258,7 +258,7 @@ button{
 
 </form>
 
-{message}
+{{message|safe}}
 
 </div>
 
