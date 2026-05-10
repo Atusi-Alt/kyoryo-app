@@ -5,8 +5,7 @@
 from flask import Flask, request, redirect, render_template_string, session
 from supabase import create_client
 from datetime import datetime
-import io
-import csv
+import json
 
 app = Flask(__name__)
 
@@ -179,7 +178,7 @@ h1{
 
 input{
     width:100%;
-    height:48px;
+    height:50px;
     margin-top:15px;
     padding:10px;
     border:none;
@@ -282,12 +281,7 @@ def home():
 
         return redirect("/")
 
-    bridge_html = ""
-
-    for bridge in bridges["ミカドR6-1"]:
-        bridge_html += f"<option>{bridge}</option>"
-
-    return f"""
+    return render_template_string("""
 
 <!DOCTYPE html>
 <html>
@@ -301,48 +295,47 @@ def home():
 
 <style>
 
-body{{
+body{
     margin:0;
     background:#020b22;
-    font-family:Arial;
+    font-family:Arial,sans-serif;
     color:white;
-}}
+}
 
-.header{{
+.header{
     background:linear-gradient(90deg,#2563eb,#06b6d4);
     padding:16px;
     text-align:center;
     font-size:24px;
     font-weight:bold;
     box-shadow:0 0 18px #0ea5e9;
-}}
+}
 
-.container{{
+.container{
     max-width:600px;
     margin:10px auto;
     padding:10px;
-}}
+}
 
-.card{{
+.card{
     background:#081229;
     border:1px solid #16325c;
     border-radius:18px;
     padding:18px;
-    box-shadow:0 0 15px rgba(37,99,235,0.35);
-}}
+}
 
-label{{
+label{
     display:block;
-    margin-top:12px;
+    margin-top:14px;
     margin-bottom:6px;
     font-size:16px;
     font-weight:bold;
     color:#93c5fd;
-}}
+}
 
-input,select{{
+input,select{
     width:100%;
-    height:48px;
+    height:50px;
     padding:10px;
     border:none;
     border-radius:10px;
@@ -350,9 +343,9 @@ input,select{{
     color:white;
     font-size:16px;
     box-sizing:border-box;
-}}
+}
 
-button{{
+button{
     width:100%;
     padding:14px;
     margin-top:18px;
@@ -362,11 +355,11 @@ button{{
     color:white;
     font-size:18px;
     font-weight:bold;
-}}
+}
 
-.subbtn{{
+.subbtn{
     background:#1e293b;
-}}
+}
 
 </style>
 
@@ -386,25 +379,25 @@ button{{
 
 <label>現場名</label>
 
-<select name="site">
+<select id="site" name="site" onchange="changeBridge()">
 
-{''.join([f'<option>{x}</option>' for x in sites])}
+<option>ミカドR6-1</option>
+<option>ミカドR6-2</option>
 
 </select>
 
 <label>橋名</label>
 
-<select name="bridge">
-
-{bridge_html}
-
-</select>
+<select id="bridge" name="bridge"></select>
 
 <label>箇所</label>
 
 <select name="place">
 
-{''.join([f'<option>{x}</option>' for x in places])}
+<option>上部工</option>
+<option>下部工</option>
+<option>上部工内面</option>
+<option>下部工内面</option>
 
 </select>
 
@@ -412,7 +405,9 @@ button{{
 
 <select name="part">
 
-{''.join([f'<option>{x}</option>' for x in parts])}
+<option>一般部</option>
+<option>増し塗り部</option>
+<option>一種部</option>
 
 </select>
 
@@ -420,7 +415,9 @@ button{{
 
 <select name="lot">
 
-{''.join([f'<option>{x}</option>' for x in lots])}
+{% for i in range(1,51) %}
+<option>{{i}}</option>
+{% endfor %}
 
 </select>
 
@@ -428,7 +425,9 @@ button{{
 
 <select name="point">
 
-{''.join([f'<option>{x}</option>' for x in points])}
+{% for i in range(1,26) %}
+<option>{{i}}</option>
+{% endfor %}
 
 </select>
 
@@ -436,7 +435,14 @@ button{{
 
 <select name="process">
 
-{''.join([f'<option>{x}</option>' for x in processes])}
+<option>防食下地</option>
+<option>下塗1</option>
+<option>増し塗1</option>
+<option>増し塗2</option>
+<option>下塗2</option>
+<option>中塗</option>
+<option>上塗</option>
+<option>補修塗</option>
 
 </select>
 
@@ -456,19 +462,47 @@ button{{
 </button>
 </a>
 
-<a href="/backup">
+<a href="/logout">
 <button class="subbtn">
-CSVバックアップ
+ログアウト
 </button>
 </a>
 
 </div>
 </div>
 
+<script>
+
+const bridges = {{ bridges|safe }}
+
+function changeBridge(){
+
+    let site = document.getElementById("site").value
+
+    let bridgeSelect = document.getElementById("bridge")
+
+    bridgeSelect.innerHTML = ""
+
+    bridges[site].forEach(function(bridge){
+
+        let option = document.createElement("option")
+
+        option.value = bridge
+        option.text = bridge
+
+        bridgeSelect.appendChild(option)
+
+    })
+}
+
+changeBridge()
+
+</script>
+
 </body>
 </html>
 
-"""
+""", bridges=json.dumps(bridges))
 
 # =====================================================
 # 一覧
@@ -482,8 +516,6 @@ def list_page():
 
     rows = supabase.table("data").select("*").order("id").execute().data
 
-    html = ""
-
     bridge_names = []
 
     for row in rows:
@@ -493,13 +525,15 @@ def list_page():
         if bridge not in bridge_names:
             bridge_names.append(bridge)
 
+    html = ""
+
     for bridge in bridge_names:
 
         html += f"""
 
-<div class='bridge-title'>
-{bridge}
-</div>
+<details class='bridge-box'>
+
+<summary>{bridge}</summary>
 
 """
 
@@ -539,9 +573,9 @@ def list_page():
 
                 html += f"""
 
-<div class='lot-title'>
-{lot}ロット
-</div>
+<details class='lot-box'>
+
+<summary>{lot}ロット</summary>
 
 <table>
 
@@ -552,6 +586,8 @@ def list_page():
 <th>工程</th>
 <th>膜厚</th>
 <th>判定</th>
+<th>編集</th>
+<th>削除</th>
 </tr>
 
 """
@@ -587,11 +623,43 @@ def list_page():
 
 </td>
 
+<td>
+
+<a href='/edit/{row['id']}'>
+
+<button class='edit-btn'>
+編集
+</button>
+
+</a>
+
+</td>
+
+<td>
+
+<a href='/delete/{row['id']}'>
+
+<button class='delete-btn'>
+削除
+</button>
+
+</a>
+
+</td>
+
 </tr>
 
 """
 
-                html += "</table>"
+                html += """
+
+</table>
+
+</details>
+
+"""
+
+        html += "</details>"
 
     return f"""
 
@@ -612,35 +680,45 @@ body{{
     padding:15px;
 }}
 
-.bridge-title{{
-    font-size:26px;
+.bridge-box{{
+    background:white;
+    border-radius:16px;
+    margin-bottom:20px;
+    padding:10px;
+}}
+
+.bridge-box summary{{
+    font-size:28px;
     font-weight:bold;
-    margin-top:20px;
-    margin-bottom:15px;
+    cursor:pointer;
+    list-style:none;
 }}
 
 .part-title{{
     background:#1e3a8a;
     color:white;
-    padding:15px;
-    border-radius:12px;
+    padding:14px;
+    border-radius:10px;
     font-size:22px;
     font-weight:bold;
     margin-top:20px;
 }}
 
-.lot-title{{
-    color:#1e3a8a;
-    font-size:18px;
+.lot-box{{
+    margin-top:20px;
+}}
+
+.lot-box summary{{
+    font-size:20px;
     font-weight:bold;
-    margin-top:25px;
-    margin-bottom:10px;
+    color:#1e3a8a;
+    cursor:pointer;
 }}
 
 table{{
     width:100%;
     border-collapse:collapse;
-    margin-bottom:20px;
+    margin-top:10px;
     background:white;
 }}
 
@@ -653,6 +731,122 @@ th,td{{
 
 th{{
     background:#c7d2fe;
+}}
+
+.main-btn{{
+    width:100%;
+    padding:14px;
+    margin-top:20px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}}
+
+.edit-btn{{
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:8px;
+}}
+
+.delete-btn{{
+    background:#dc2626;
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:8px;
+}}
+
+</style>
+
+</head>
+
+<body>
+
+{html}
+
+<a href="/">
+<button class='main-btn'>
+戻る
+</button>
+</a>
+
+</body>
+</html>
+
+"""
+
+# =====================================================
+# 編集
+# =====================================================
+
+@app.route("/edit/<id>", methods=["GET","POST"])
+def edit(id):
+
+    if request.method == "POST":
+
+        process = request.form.get("process")
+        thickness = request.form.get("thickness")
+
+        standard = standards.get(process,0)
+
+        result = "OK"
+
+        if int(thickness) < standard:
+            result = "NG"
+
+        supabase.table("data").update({
+
+            "process":process,
+            "thickness":thickness,
+            "result":result
+
+        }).eq("id", id).execute()
+
+        return redirect("/list")
+
+    row = supabase.table("data").select("*").eq("id", id).execute().data[0]
+
+    return f"""
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset='UTF-8'>
+
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+
+<style>
+
+body{{
+    margin:0;
+    background:#020b22;
+    color:white;
+    font-family:Arial;
+    padding:20px;
+}}
+
+.card{{
+    background:#081229;
+    border-radius:18px;
+    padding:20px;
+}}
+
+input,select{{
+    width:100%;
+    height:50px;
+    margin-top:12px;
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:#1e293b;
+    color:white;
+    box-sizing:border-box;
 }}
 
 button{{
@@ -673,107 +867,58 @@ button{{
 
 <body>
 
-{html}
+<div class='card'>
 
-<a href="/">
+<h1>編集</h1>
+
+<form method='POST'>
+
+<select name='process'>
+
+<option {'selected' if row['process']=='防食下地' else ''}>防食下地</option>
+<option {'selected' if row['process']=='下塗1' else ''}>下塗1</option>
+<option {'selected' if row['process']=='増し塗1' else ''}>増し塗1</option>
+<option {'selected' if row['process']=='増し塗2' else ''}>増し塗2</option>
+<option {'selected' if row['process']=='下塗2' else ''}>下塗2</option>
+<option {'selected' if row['process']=='中塗' else ''}>中塗</option>
+<option {'selected' if row['process']=='上塗' else ''}>上塗</option>
+<option {'selected' if row['process']=='補修塗' else ''}>補修塗</option>
+
+</select>
+
+<input type='number' name='thickness' value='{row['thickness']}'>
+
+<button type='submit'>
+更新
+</button>
+
+</form>
+
+<a href='/list'>
+
 <button>
 戻る
 </button>
+
 </a>
 
+</div>
+
 </body>
 </html>
 
 """
 
 # =====================================================
-# CSV
+# 削除
 # =====================================================
 
-@app.route("/backup")
-def backup():
+@app.route("/delete/<id>")
+def delete(id):
 
-    if not session.get("login"):
-        return redirect("/login")
+    supabase.table("data").delete().eq("id", id).execute()
 
-    rows = supabase.table("data").select("*").execute().data
-
-    output = io.StringIO()
-
-    writer = csv.writer(output)
-
-    writer.writerow([
-        "datetime",
-        "site",
-        "bridge",
-        "place",
-        "part",
-        "lot",
-        "point",
-        "process",
-        "thickness",
-        "result"
-    ])
-
-    for row in rows:
-
-        writer.writerow([
-            row.get("datetime",""),
-            row.get("site",""),
-            row.get("bridge",""),
-            row.get("place",""),
-            row.get("part",""),
-            row.get("lot",""),
-            row.get("point",""),
-            row.get("process",""),
-            row.get("thickness",""),
-            row.get("result","")
-        ])
-
-    return f"""
-
-<!DOCTYPE html>
-<html>
-<head>
-
-<meta charset='UTF-8'>
-
-<style>
-
-body{{
-    background:#020b22;
-    color:white;
-    font-family:Arial;
-    padding:20px;
-}}
-
-textarea{{
-    width:100%;
-    height:500px;
-    background:#111827;
-    color:#38bdf8;
-    border:none;
-    padding:10px;
-}}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>CSVバックアップ</h1>
-
-<textarea>
-
-{output.getvalue()}
-
-</textarea>
-
-</body>
-</html>
-
-"""
+    return redirect("/list")
 
 # =====================================================
 # LOGOUT
