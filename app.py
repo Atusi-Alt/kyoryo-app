@@ -590,10 +590,11 @@ def edit_page(data_id):
     return f"""
 
     <body style='
-    background:#0f172a;
-    font-family:Arial;
-    color:white;
-    padding:20px;
+    background:#03152e;
+font-family:Arial;
+color:white;
+padding:12px;
+margin:0;
     '>
 
     <h1 style='color:#38bdf8;'>データ編集</h1>
@@ -605,10 +606,11 @@ def edit_page(data_id):
     value="{row['thickness']}"
     style='
     width:100%;
+    height:52px;
     padding:14px;
     border:none;
     border-radius:10px;
-    background:#1e293b;
+
     color:white;
     font-size:18px;
     box-sizing:border-box;
@@ -621,10 +623,11 @@ def edit_page(data_id):
     margin-top:25px;
     border:none;
     border-radius:14px;
-    background:#2563eb;
+    background:linear-gradient(90deg,#2563eb,#06b6d4);
     color:white;
-    font-size:22px;
+    font-size:18px;
     font-weight:bold;
+    height:54px;
     '>
 
     保存
