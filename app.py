@@ -1,3 +1,6 @@
+# app.py
+
+```python
 from flask import Flask, request, render_template_string, redirect, session
 from supabase import create_client
 import pandas as pd
@@ -13,7 +16,7 @@ app.secret_key = "Sakura6788"
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
 
-key = "sb_publishable_Z-nEPLmqRbLV_kWy_lW0GA_b7DC-EIn"
+key = "ここに公開可能なキーを貼る"
 
 supabase = create_client(url, key)
 
@@ -22,7 +25,6 @@ supabase = create_client(url, key)
 # =====================================
 
 standards = {
-
     "防食下地":75,
     "下塗1":60,
     "増し塗1":60,
@@ -30,7 +32,6 @@ standards = {
     "下塗2":60,
     "中塗り":30,
     "上塗り":25
-
 }
 
 # =====================================
@@ -38,13 +39,11 @@ standards = {
 # =====================================
 
 users = {
-
     "敦司":"6788",
     "furui":"6788",
     "tsuchiya":"6788",
     "akashi":"6788",
     "kawano":"6788"
-
 }
 
 # =====================================
@@ -199,7 +198,6 @@ def login():
 def home():
 
     if "login" not in session:
-
         return redirect("/")
 
     if request.method == "POST":
@@ -350,9 +348,7 @@ def home():
     }
 
     function init(){
-
         updateBridge()
-
     }
 
     </script>
@@ -362,9 +358,7 @@ def home():
     <body onload="init()">
 
     <div class="header">
-
     橋梁膜厚管理
-
     </div>
 
     <div class="container">
@@ -379,21 +373,14 @@ def home():
     name="site"
     onchange="updateBridge()">
 
-    <option value="ミカドR6-1">
-    ミカドR6-1
-    </option>
-
-    <option value="ミカドR6-2">
-    ミカドR6-2
-    </option>
+    <option value="ミカドR6-1">ミカドR6-1</option>
+    <option value="ミカドR6-2">ミカドR6-2</option>
 
     </select>
 
     <label>橋名</label>
 
-    <select id="bridge" name="bridge">
-
-    </select>
+    <select id="bridge" name="bridge"></select>
 
     <label>箇所</label>
 
@@ -456,17 +443,13 @@ def home():
     <input type="number" name="thickness">
 
     <button type="submit">
-
     保存
-
     </button>
 
     </form>
 
     <a class="link" href="/list">
-
     入力情報一覧
-
     </a>
 
     </div>
@@ -521,9 +504,7 @@ def list_page():
 
             site_df = df[df["site"] == site]
 
-            bridges_unique = sorted(
-                site_df["bridge"].unique()
-            )
+            bridges_unique = sorted(site_df["bridge"].unique())
 
             for bridge in bridges_unique:
 
@@ -583,6 +564,105 @@ def list_page():
     """
 
 # =====================================
+# 編集
+# =====================================
+
+@app.route("/edit/<data_id>", methods=["GET","POST"])
+def edit_page(data_id):
+
+    response = (
+        supabase
+        .table("data")
+        .select("*")
+        .eq("id", data_id)
+        .execute()
+    )
+
+    row = response.data[0]
+
+    if request.method == "POST":
+
+        supabase.table("data").update({
+            "thickness": request.form["thickness"]
+        }).eq("id", data_id).execute()
+
+        return redirect(f"/bridge/{row['bridge']}")
+
+    return f"""
+
+    <body style='
+    background:#0f172a;
+    font-family:Arial;
+    color:white;
+    padding:20px;
+    '>
+
+    <h1 style='color:#38bdf8;'>データ編集</h1>
+
+    <form method="POST">
+
+    <input type="number"
+    name="thickness"
+    value="{row['thickness']}"
+    style='
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#1e293b;
+    color:white;
+    font-size:18px;
+    box-sizing:border-box;
+    '>
+
+    <button type="submit"
+    style='
+    width:100%;
+    padding:16px;
+    margin-top:25px;
+    border:none;
+    border-radius:14px;
+    background:#2563eb;
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+    '>
+
+    保存
+
+    </button>
+
+    </form>
+
+    </body>
+
+    """
+
+# =====================================
+# 削除
+# =====================================
+
+@app.route("/delete/<data_id>")
+def delete_page(data_id):
+
+    response = (
+        supabase
+        .table("data")
+        .select("*")
+        .eq("id", data_id)
+        .execute()
+    )
+
+    row = response.data[0]
+
+    supabase.table("data").delete().eq(
+        "id",
+        data_id
+    ).execute()
+
+    return redirect(f"/bridge/{row['bridge']}")
+
+# =====================================
 # 橋詳細
 # =====================================
 
@@ -599,32 +679,18 @@ def bridge_page(bridge):
 
     df = pd.DataFrame(response.data)
 
-    html = f"""
-
-    <h1 style='color:#38bdf8;'>
-
-    {bridge}
-
-    </h1>
-
-    """
+    html = f"<h1 style='color:#38bdf8;'>{bridge}</h1>"
 
     if len(df) == 0:
-
         return html + "データなし"
 
-    parts = [
-        "一般部",
-        "増し塗り部",
-        "一種部"
-    ]
+    parts = ["一般部","増し塗り部","一種部"]
 
     for part in parts:
 
         part_df = df[df["part"] == part]
 
         if len(part_df) == 0:
-
             continue
 
         html += f"""
@@ -670,30 +736,18 @@ def bridge_page(bridge):
 
             """
 
-            lot_df = part_df[
-                part_df["lot"] == lot
-            ]
+            lot_df = part_df[part_df["lot"] == lot]
 
-            points = sorted(
-                lot_df["point"].unique(),
-                key=int
-            )
+            points = sorted(lot_df["point"].unique(), key=int)
 
             for point in points:
 
-                point_df = lot_df[
-                    lot_df["point"] == point
-                ]
+                point_df = lot_df[lot_df["point"] == point]
 
                 html += f"""
 
-                <h3 style='
-                margin-top:30px;
-                color:#93c5fd;
-                '>
-
+                <h3 style='margin-top:30px;color:#93c5fd;'>
                 測点 {point}
-
                 </h3>
 
                 <table style='
@@ -708,6 +762,8 @@ def bridge_page(bridge):
                 <th style='padding:12px;'>膜厚</th>
                 <th style='padding:12px;'>増加量</th>
                 <th style='padding:12px;'>判定</th>
+                <th style='padding:12px;'>編集</th>
+                <th style='padding:12px;'>削除</th>
                 <th style='padding:12px;'>入力者</th>
                 <th style='padding:12px;'>日時</th>
 
@@ -719,39 +775,25 @@ def bridge_page(bridge):
 
                 for i,row in point_df.iterrows():
 
-                    thickness = int(
-                        row["thickness"]
-                    )
+                    thickness = int(row["thickness"])
 
                     increase = "-"
-
                     result = "-"
-
                     color = "white"
 
                     if previous is not None:
 
-                        diff = (
-                            thickness - previous
-                        )
+                        diff = thickness - previous
 
                         increase = f"+{diff}"
 
-                        standard = standards.get(
-                            row["process"],
-                            0
-                        )
+                        standard = standards.get(row["process"],0)
 
                         if diff >= standard:
-
                             result = "○"
-
                             color = "#22c55e"
-
                         else:
-
                             result = "✕"
-
                             color = "#ef4444"
 
                     previous = thickness
@@ -760,34 +802,16 @@ def bridge_page(bridge):
 
                     <tr>
 
-                    <td style='
-                    background:#1e293b;
-                    padding:12px;
-                    text-align:center;
-                    '>
-
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
                     {row["process"]}
-
                     </td>
 
-                    <td style='
-                    background:#1e293b;
-                    padding:12px;
-                    text-align:center;
-                    '>
-
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
                     {thickness}μ
-
                     </td>
 
-                    <td style='
-                    background:#1e293b;
-                    padding:12px;
-                    text-align:center;
-                    '>
-
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
                     {increase}
-
                     </td>
 
                     <td style='
@@ -798,29 +822,23 @@ def bridge_page(bridge):
                     font-size:22px;
                     font-weight:bold;
                     '>
-
                     {result}
-
                     </td>
 
-                    <td style='
-                    background:#1e293b;
-                    padding:12px;
-                    text-align:center;
-                    '>
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
+                    <a href='/edit/{row["id"]}' style='color:#38bdf8;text-decoration:none;font-weight:bold;'>編集</a>
+                    </td>
 
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
+                    <a href='/delete/{row["id"]}' style='color:#ef4444;text-decoration:none;font-weight:bold;'>削除</a>
+                    </td>
+
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
                     {row["user_name"]}
-
                     </td>
 
-                    <td style='
-                    background:#1e293b;
-                    padding:12px;
-                    text-align:center;
-                    '>
-
+                    <td style='background:#1e293b;padding:12px;text-align:center;'>
                     {row["datetime"]}
-
                     </td>
 
                     </tr>
@@ -868,3 +886,79 @@ def bridge_page(bridge):
 
 if __name__ == "__main__":
     app.run(debug=True)
+```
+
+# requirements.txt
+
+```txt
+flask
+pandas
+supabase
+gunicorn
+```
+
+# Supabase側で必要なテーブル
+
+テーブル名:
+
+```txt
+data
+```
+
+カラム:
+
+```txt
+id
+int8
+PRIMARY KEY
+```
+
+```txt
+datetime
+text
+```
+
+```txt
+user_name
+text
+```
+
+```txt
+site
+text
+```
+
+```txt
+bridge
+text
+```
+
+```txt
+place
+text
+```
+
+```txt
+part
+text
+```
+
+```txt
+lot
+text
+```
+
+```txt
+point
+text
+```
+
+```txt
+process
+text
+```
+
+```txt
+thickness
+text
+```
