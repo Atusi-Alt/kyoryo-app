@@ -1,5 +1,6 @@
 # =====================================================
-# 橋梁膜厚管理 完全完成版
+# 橋梁膜厚管理 完全版
+# ログイン・一覧・編集・削除・前層差対応
 # =====================================================
 
 from flask import Flask, request, redirect, render_template_string, session
@@ -45,41 +46,22 @@ sites = [
 bridges = {
 
     "ミカドR6-1":[
-        "I 1-286",
-        "I 2-286",
-        "I 1-287",
-        "I 2-287",
-        "I 1-288",
-        "I 2-288",
-        "I 1-289",
-        "I 2-289",
-        "I 1-290",
-        "I 2-290",
-        "I 1-291",
-        "I 2-291",
-        "I 1-292",
-        "I 2-292",
-        "I-287",
-        "I-288",
-        "I-289",
-        "I-290",
-        "I-291",
-        "I-292"
+        "I 1-286","I 2-286",
+        "I 1-287","I 2-287",
+        "I 1-288","I 2-288",
+        "I 1-289","I 2-289",
+        "I 1-290","I 2-290",
+        "I 1-291","I 2-291",
+        "I 1-292","I 2-292",
+        "I-287","I-288","I-289",
+        "I-290","I-291","I-292"
     ],
 
     "ミカドR6-2":[
-        "Ⅱ 1-144",
-        "Ⅱ 2-144",
-        "入-144",
-        "Ⅱ 1-145",
-        "Ⅱ 2-145",
-        "入-145",
-        "Ⅱ 1-146",
-        "Ⅱ 2-146",
-        "入-146",
-        "Ⅱ-145",
-        "Ⅱ-146",
-        "Ⅱ-147"
+        "Ⅱ 1-144","Ⅱ 2-144","入-144",
+        "Ⅱ 1-145","Ⅱ 2-145","入-145",
+        "Ⅱ 1-146","Ⅱ 2-146","入-146",
+        "Ⅱ-145","Ⅱ-146","Ⅱ-147"
     ]
 }
 
@@ -147,13 +129,9 @@ def login():
     return """
 
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
 <meta charset='UTF-8'>
-
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 
 <style>
@@ -171,12 +149,6 @@ body{
     background:#081229;
     border-radius:20px;
     padding:25px;
-    border:1px solid #16325c;
-}
-
-h1{
-    text-align:center;
-    color:#38bdf8;
 }
 
 input{
@@ -188,7 +160,6 @@ input{
     border-radius:10px;
     background:#1e293b;
     color:white;
-    font-size:16px;
     box-sizing:border-box;
 }
 
@@ -198,10 +169,14 @@ button{
     margin-top:20px;
     border:none;
     border-radius:12px;
-    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    background:#2563eb;
     color:white;
     font-size:18px;
     font-weight:bold;
+}
+
+h1{
+    text-align:center;
 }
 
 </style>
@@ -248,38 +223,86 @@ def home():
 
         process = request.form.get("process")
 
-        thickness = request.form.get("thickness")
+        thickness = int(request.form.get("thickness"))
 
         standard = standards.get(process,0)
 
+        previous_thickness = 0
+
+        difference = 0
+
+        process_index = processes.index(process)
+
+        if process_index > 0:
+
+            previous_process = processes[process_index - 1]
+
+            previous_data = supabase.table("data")\
+                .select("*")\
+                .eq("bridge", request.form.get("bridge"))\
+                .eq("part", request.form.get("part"))\
+                .eq("lot", request.form.get("lot"))\
+                .eq("point", request.form.get("point"))\
+                .eq("process", previous_process)\
+                .order("id", desc=True)\
+                .limit(1)\
+                .execute()
+
+            if previous_data.data:
+
+                previous_thickness = int(
+                    previous_data.data[0]["thickness"]
+                )
+
+                difference = (
+                    thickness - previous_thickness
+                )
+
         result = "OK"
 
-        if int(thickness) < standard:
+        if thickness < standard:
             result = "NG"
 
         data = {
 
-            "datetime": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "datetime":
+            datetime.now().strftime("%Y-%m-%d %H:%M"),
 
-            "user_name": session.get("user"),
+            "user_name":
+            session.get("user"),
 
-            "site": request.form.get("site"),
+            "site":
+            request.form.get("site"),
 
-            "bridge": request.form.get("bridge"),
+            "bridge":
+            request.form.get("bridge"),
 
-            "place": request.form.get("place"),
+            "place":
+            request.form.get("place"),
 
-            "part": request.form.get("part"),
+            "part":
+            request.form.get("part"),
 
-            "lot": request.form.get("lot"),
+            "lot":
+            request.form.get("lot"),
 
-            "point": request.form.get("point"),
+            "point":
+            request.form.get("point"),
 
-            "process": process,
+            "process":
+            process,
 
-            "thickness": thickness,
+            "thickness":
+            thickness,
 
-            "result": result
+            "previous_thickness":
+            previous_thickness,
+
+            "difference":
+            difference,
+
+            "result":
+            result
         }
 
         supabase.table("data").insert(data).execute()
@@ -289,16 +312,11 @@ def home():
     return render_template_string("""
 
 <!DOCTYPE html>
-
 <html>
-
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>橋梁膜厚管理</title>
 
 <style>
 
@@ -310,34 +328,30 @@ body{
 }
 
 .header{
-    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    background:#2563eb;
     padding:18px;
     text-align:center;
     font-size:24px;
     font-weight:bold;
-    box-shadow:0 0 18px #0ea5e9;
 }
 
 .container{
     max-width:650px;
-    margin:10px auto;
+    margin:auto;
     padding:10px;
 }
 
 .card{
     background:#081229;
-    border:1px solid #16325c;
     border-radius:20px;
     padding:20px;
 }
 
 label{
     display:block;
-    margin-top:14px;
-    margin-bottom:6px;
-    font-size:16px;
+    margin-top:15px;
+    margin-bottom:5px;
     font-weight:bold;
-    color:#93c5fd;
 }
 
 input,select{
@@ -358,7 +372,7 @@ button{
     margin-top:18px;
     border:none;
     border-radius:14px;
-    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    background:#2563eb;
     color:white;
     font-size:18px;
     font-weight:bold;
@@ -375,9 +389,7 @@ button{
 <body>
 
 <div class="header">
-
 橋梁膜厚管理
-
 </div>
 
 <div class="container">
@@ -466,19 +478,15 @@ button{
 </form>
 
 <a href="/list">
-
 <button class="subbtn">
 入力情報一覧
 </button>
-
 </a>
 
 <a href="/logout">
-
 <button class="subbtn">
 ログアウト
 </button>
-
 </a>
 
 </div>
@@ -514,7 +522,6 @@ changeBridge()
 </script>
 
 </body>
-
 </html>
 
 """, bridges=json.dumps(bridges))
@@ -531,6 +538,8 @@ def list_page():
 
     rows = supabase.table("data").select("*").order("id").execute().data
 
+    html = ""
+
     bridge_names = []
 
     for row in rows:
@@ -540,16 +549,16 @@ def list_page():
         if bridge not in bridge_names:
             bridge_names.append(bridge)
 
-    html = ""
-
     for bridge in bridge_names:
 
         html += f"""
 
-<details class='bridge-box'>
+<details>
 
-<summary class='bridge-summary'>
+<summary style='font-size:30px;font-weight:bold;margin-top:20px;'>
+
 {bridge}
+
 </summary>
 
 """
@@ -569,10 +578,17 @@ def list_page():
 
             html += f"""
 
-<details class='part-box'>
+<details>
 
-<summary class='part-title'>
+<summary style='font-size:24px;
+background:#1e3a8a;
+color:white;
+padding:12px;
+border-radius:10px;
+margin-top:15px;'>
+
 {part}
+
 </summary>
 
 """
@@ -592,15 +608,23 @@ def list_page():
 
                 html += f"""
 
-<details class='lot-box'>
+<details>
 
-<summary class='lot-title'>
+<summary style='font-size:20px;
+margin-top:15px;
+font-weight:bold;'>
+
 {lot}ロット
+
 </summary>
 
-<div class='table-wrap'>
+<div style='overflow-x:auto;'>
 
-<table>
+<table style='width:100%;
+min-width:1200px;
+border-collapse:collapse;
+background:white;
+margin-top:10px;'>
 
 <tr>
 
@@ -610,6 +634,7 @@ def list_page():
 <th>箇所</th>
 <th>工程</th>
 <th>膜厚</th>
+<th>前層差</th>
 <th>判定</th>
 <th>編集</th>
 <th>削除</th>
@@ -624,10 +649,10 @@ def list_page():
 
                     result = row.get("result","")
 
-                    color = "#22c55e"
+                    color = "green"
 
                     if result == "NG":
-                        color = "#ef4444"
+                        color = "red"
 
                     html += f"""
 
@@ -643,7 +668,9 @@ def list_page():
 
 <td>{row.get('process','')}</td>
 
-<td>{row.get('thickness','')}</td>
+<td>{row.get('thickness','')}μ</td>
+
+<td>{row.get('difference',0)}μ</td>
 
 <td style='color:{color};font-weight:bold;'>
 
@@ -654,11 +681,7 @@ def list_page():
 <td>
 
 <a href='/edit/{row['id']}'>
-
-<button class='edit-btn'>
-編集
-</button>
-
+<button>編集</button>
 </a>
 
 </td>
@@ -666,11 +689,7 @@ def list_page():
 <td>
 
 <a href='/delete/{row['id']}'>
-
-<button class='delete-btn'>
-削除
-</button>
-
+<button style='background:red;'>削除</button>
 </a>
 
 </td>
@@ -709,70 +728,15 @@ def list_page():
 
 body{{
     margin:0;
+    padding:15px;
     background:#d1d5db;
     font-family:Arial;
-    padding:15px;
-}}
-
-.bridge-box{{
-    background:white;
-    border-radius:20px;
-    margin-bottom:20px;
-    padding:15px;
-}}
-
-.bridge-summary{{
-    font-size:34px;
-    font-weight:bold;
-    cursor:pointer;
-    list-style:none;
-}}
-
-.part-box{{
-    margin-top:20px;
-}}
-
-.part-title{{
-    background:#1e3a8a;
-    color:white;
-    padding:16px;
-    border-radius:12px;
-    font-size:28px;
-    font-weight:bold;
-    cursor:pointer;
-    list-style:none;
-}}
-
-.lot-box{{
-    margin-top:20px;
-}}
-
-.lot-title{{
-    font-size:22px;
-    font-weight:bold;
-    color:#1e3a8a;
-    cursor:pointer;
-    list-style:none;
-}}
-
-.table-wrap{{
-    width:100%;
-    overflow-x:auto;
-}}
-
-table{{
-    width:100%;
-    min-width:1100px;
-    border-collapse:collapse;
-    margin-top:10px;
-    background:white;
 }}
 
 th,td{{
-    border:1px solid #d1d5db;
-    padding:12px;
+    border:1px solid #ccc;
+    padding:10px;
     text-align:center;
-    font-size:14px;
     white-space:nowrap;
 }}
 
@@ -780,32 +744,18 @@ th{{
     background:#c7d2fe;
 }}
 
+button{{
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+}}
+
 .main-btn{{
     width:100%;
     padding:14px;
-    margin-top:20px;
-    border:none;
-    border-radius:12px;
-    background:linear-gradient(90deg,#2563eb,#06b6d4);
-    color:white;
-    font-size:18px;
-    font-weight:bold;
-}}
-
-.edit-btn{{
-    background:#2563eb;
-    color:white;
-    border:none;
-    border-radius:8px;
-    padding:8px 12px;
-}}
-
-.delete-btn{{
-    background:#dc2626;
-    color:white;
-    border:none;
-    border-radius:8px;
-    padding:8px 12px;
+    margin-bottom:20px;
 }}
 
 </style>
@@ -815,11 +765,9 @@ th{{
 <body>
 
 <a href="/">
-
 <button class='main-btn'>
 戻る
 </button>
-
 </a>
 
 {html}
@@ -841,13 +789,13 @@ def edit(id):
 
         process = request.form.get("process")
 
-        thickness = request.form.get("thickness")
+        thickness = int(request.form.get("thickness"))
 
         standard = standards.get(process,0)
 
         result = "OK"
 
-        if int(thickness) < standard:
+        if thickness < standard:
             result = "NG"
 
         supabase.table("data").update({
@@ -872,28 +820,26 @@ def edit(id):
 
 <meta charset='UTF-8'>
 
-<meta name='viewport' content='width=device-width, initial-scale=1.0'>
-
 <style>
 
 body{{
     margin:0;
+    padding:20px;
     background:#020b22;
     color:white;
     font-family:Arial;
-    padding:20px;
 }}
 
 .card{{
     background:#081229;
-    border-radius:20px;
     padding:20px;
+    border-radius:20px;
 }}
 
 input,select{{
     width:100%;
     height:50px;
-    margin-top:12px;
+    margin-top:15px;
     padding:10px;
     border:none;
     border-radius:10px;
@@ -908,10 +854,9 @@ button{{
     margin-top:20px;
     border:none;
     border-radius:12px;
-    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    background:#2563eb;
     color:white;
     font-size:18px;
-    font-weight:bold;
 }}
 
 </style>
@@ -939,7 +884,8 @@ button{{
 
 </select>
 
-<input type='number' name='thickness' value='{row['thickness']}'>
+<input type='number' name='thickness'
+value='{row['thickness']}'>
 
 <button type='submit'>
 更新
@@ -948,11 +894,9 @@ button{{
 </form>
 
 <a href='/list'>
-
 <button>
 戻る
 </button>
-
 </a>
 
 </div>
