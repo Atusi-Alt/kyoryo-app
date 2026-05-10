@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, session
+from flask import Flask, request, render_template_string, redirect, session
 from supabase import create_client
 import pandas as pd
 from datetime import datetime, timedelta
@@ -7,9 +7,9 @@ app = Flask(__name__)
 
 app.secret_key = "Sakura6788"
 
-# ====================================
-# Supabase接続
-# ====================================
+# =====================================
+# Supabase
+# =====================================
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
 
@@ -17,11 +17,12 @@ key = "ここに公開可能なキー"
 
 supabase = create_client(url, key)
 
-# ====================================
+# =====================================
 # 判定基準
-# ====================================
+# =====================================
 
 standards = {
+
     "防食下地":75,
     "下塗1":60,
     "増し塗1":60,
@@ -29,23 +30,26 @@ standards = {
     "下塗2":60,
     "中塗り":30,
     "上塗り":25
+
 }
 
-# ====================================
+# =====================================
 # ユーザー
-# ====================================
+# =====================================
 
 users = {
+
     "敦司":"6788",
     "furui":"6788",
     "tsuchiya":"6788",
     "akashi":"6788",
     "kawano":"6788"
+
 }
 
-# ====================================
+# =====================================
 # 橋データ
-# ====================================
+# =====================================
 
 bridges = {
 
@@ -80,11 +84,343 @@ bridges = {
         "Ⅱ-146",
         "Ⅱ-147"
     ]
+
 }
 
-# ====================================
+# =====================================
+# ログイン画面
+# =====================================
+
+login_html = """
+
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>ログイン</title>
+
+<style>
+
+body{
+    background:#eef2f7;
+    font-family:Arial;
+}
+
+.box{
+    width:350px;
+    margin:120px auto;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+}
+
+h1{
+    text-align:center;
+    color:#1f3c88;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:20px;
+    border:none;
+    border-radius:10px;
+    background:#1f3c88;
+    color:white;
+    font-size:20px;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>橋梁膜厚管理</h1>
+
+<form method="POST">
+
+<input name="id" placeholder="ID">
+
+<input type="password" name="pw" placeholder="パスワード">
+
+<button type="submit">
+ログイン
+</button>
+
+</form>
+
+</div>
+
+</body>
+
+</html>
+
+"""
+
+# =====================================
+# ホーム画面
+# =====================================
+
+home_html = """
+
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>橋梁膜厚管理</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#eef2f7;
+    font-family:Arial;
+}
+
+.header{
+    background:#1f3c88;
+    color:white;
+    text-align:center;
+    padding:20px;
+    font-size:30px;
+    font-weight:bold;
+}
+
+.container{
+    max-width:700px;
+    margin:20px auto;
+    background:white;
+    padding:25px;
+    border-radius:20px;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    font-weight:bold;
+}
+
+input,select{
+    width:100%;
+    padding:12px;
+    margin-top:5px;
+    border-radius:10px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
+    font-size:18px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:25px;
+    border:none;
+    border-radius:10px;
+    background:#1f3c88;
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.link{
+    display:block;
+    text-align:center;
+    margin-top:20px;
+    background:#dfe7ff;
+    padding:14px;
+    border-radius:10px;
+    text-decoration:none;
+    color:#1f3c88;
+    font-weight:bold;
+}
+
+.ok{
+    color:green;
+    font-weight:bold;
+}
+
+.ng{
+    color:red;
+    font-weight:bold;
+}
+
+</style>
+
+<script>
+
+const bridges = {{bridges|safe}}
+
+function updateBridge(){
+
+    const site = document.getElementById("site").value
+
+    const bridge = document.getElementById("bridge")
+
+    bridge.innerHTML = ""
+
+    bridges[site].forEach(function(item){
+
+        let option = document.createElement("option")
+
+        option.text = item
+
+        option.value = item
+
+        bridge.add(option)
+
+    })
+
+}
+
+function init(){
+
+    updateBridge()
+
+}
+
+</script>
+
+</head>
+
+<body onload="init()">
+
+<div class="header">
+橋梁膜厚管理
+</div>
+
+<div class="container">
+
+<form method="POST">
+
+<label>現場名</label>
+
+<select id="site" name="site" onchange="updateBridge()">
+
+<option value="ミカドR6-1">ミカドR6-1</option>
+<option value="ミカドR6-2">ミカドR6-2</option>
+
+</select>
+
+<label>橋名</label>
+
+<select id="bridge" name="bridge"></select>
+
+<label>箇所</label>
+
+<select name="place">
+
+<option>上部工</option>
+<option>下部工</option>
+<option>上部工内面</option>
+<option>下部工内面</option>
+
+</select>
+
+<label>部位</label>
+
+<select name="part">
+
+<option>一般部</option>
+<option>増し塗り部</option>
+<option>一種部</option>
+
+</select>
+
+<label>ロット</label>
+
+<select name="lot">
+
+"""
+
+for i in range(1,51):
+
+    home_html += f"<option>{i}</option>"
+
+home_html += """
+
+</select>
+
+<label>測点</label>
+
+<select name="point">
+
+"""
+
+for i in range(1,26):
+
+    home_html += f"<option>{i}</option>"
+
+home_html += """
+
+</select>
+
+<label>工程</label>
+
+<select name="process">
+
+<option>防食下地</option>
+<option>補修塗</option>
+<option>下塗1</option>
+<option>増し塗1</option>
+<option>増し塗2</option>
+<option>下塗2</option>
+<option>中塗り</option>
+<option>上塗り</option>
+
+</select>
+
+<label>膜厚</label>
+
+<input type="number" name="thickness">
+
+<button type="submit">
+
+保存
+
+</button>
+
+</form>
+
+<a class="link" href="/list">
+
+入力情報一覧
+
+</a>
+
+</div>
+
+</body>
+
+</html>
+
+"""
+
+# =====================================
 # ログイン
-# ====================================
+# =====================================
 
 @app.route("/", methods=["GET","POST"])
 def login():
@@ -92,41 +428,26 @@ def login():
     if request.method == "POST":
 
         user_id = request.form["id"]
-        password = request.form["pw"]
+        user_pw = request.form["pw"]
 
-        if user_id in users and users[user_id] == password:
+        if user_id in users and users[user_id] == user_pw:
 
             session["login"] = True
             session["user"] = user_id
 
             return redirect("/home")
 
-    return """
+    return render_template_string(login_html)
 
-    <h1>橋梁膜厚管理</h1>
-
-    <form method="POST">
-
-    ID<br>
-    <input name="id"><br><br>
-
-    PASSWORD<br>
-    <input type="password" name="pw"><br><br>
-
-    <button type="submit">ログイン</button>
-
-    </form>
-
-    """
-
-# ====================================
+# =====================================
 # ホーム
-# ====================================
+# =====================================
 
 @app.route("/home", methods=["GET","POST"])
 def home():
 
     if "login" not in session:
+
         return redirect("/")
 
     if request.method == "POST":
@@ -150,139 +471,14 @@ def home():
 
         }).execute()
 
-    site_options = ""
+    return render_template_string(
+        home_html,
+        bridges=bridges
+    )
 
-    for site in bridges:
-
-        site_options += f"<option>{site}</option>"
-
-    bridge_options = ""
-
-    for site in bridges:
-
-        for bridge in bridges[site]:
-
-            bridge_options += f"<option>{bridge}</option>"
-
-    lot_options = ""
-
-    for i in range(1,51):
-
-        lot_options += f"<option>{i}</option>"
-
-    point_options = ""
-
-    for i in range(1,26):
-
-        point_options += f"<option>{i}</option>"
-
-    return f"""
-
-    <h1>橋梁膜厚管理</h1>
-
-    <form method="POST">
-
-    現場名<br>
-
-    <select name="site">
-
-    {site_options}
-
-    </select>
-
-    <br><br>
-
-    橋名<br>
-
-    <select name="bridge">
-
-    {bridge_options}
-
-    </select>
-
-    <br><br>
-
-    箇所<br>
-
-    <select name="place">
-
-    <option>上部工</option>
-    <option>下部工</option>
-    <option>上部工内面</option>
-    <option>下部工内面</option>
-
-    </select>
-
-    <br><br>
-
-    部位<br>
-
-    <select name="part">
-
-    <option>一般部</option>
-    <option>増し塗り部</option>
-    <option>一種部</option>
-
-    </select>
-
-    <br><br>
-
-    ロット<br>
-
-    <select name="lot">
-
-    {lot_options}
-
-    </select>
-
-    <br><br>
-
-    測点<br>
-
-    <select name="point">
-
-    {point_options}
-
-    </select>
-
-    <br><br>
-
-    工程<br>
-
-    <select name="process">
-
-    <option>防食下地</option>
-    <option>補修塗</option>
-    <option>下塗1</option>
-    <option>増し塗1</option>
-    <option>増し塗2</option>
-    <option>下塗2</option>
-    <option>中塗り</option>
-    <option>上塗り</option>
-
-    </select>
-
-    <br><br>
-
-    膜厚<br>
-
-    <input type="number" name="thickness">
-
-    <br><br>
-
-    <button type="submit">保存</button>
-
-    </form>
-
-    <br><br>
-
-    <a href="/list">入力情報一覧</a>
-
-    """
-
-# ====================================
+# =====================================
 # 一覧
-# ====================================
+# =====================================
 
 @app.route("/list")
 def list_page():
@@ -291,35 +487,92 @@ def list_page():
 
     df = pd.DataFrame(response.data)
 
-    html = "<h1>入力情報一覧</h1>"
+    html = ""
 
     if len(df) == 0:
 
-        return html + "データなし"
+        html = "<h1>データなし</h1>"
 
-    for site in df["site"].unique():
+    else:
 
-        html += f"<h2>{site}</h2>"
+        sites = df["site"].unique()
 
-        site_df = df[df["site"] == site]
-
-        for bridge in site_df["bridge"].unique():
+        for site in sites:
 
             html += f"""
 
-            <a href='/bridge/{bridge}'>
+            <h2 style='
+            background:#1f3c88;
+            color:white;
+            padding:15px;
+            border-radius:10px;
+            '>
 
-            {bridge}
+            {site}
 
-            </a><br><br>
+            </h2>
 
             """
 
-    return html
+            site_df = df[df["site"] == site]
 
-# ====================================
+            for bridge in site_df["bridge"].unique():
+
+                html += f"""
+
+                <a href="/bridge/{bridge}"
+                style='
+                display:block;
+                background:white;
+                padding:15px;
+                margin-top:10px;
+                border-radius:10px;
+                text-decoration:none;
+                font-size:22px;
+                font-weight:bold;
+                color:#1f3c88;
+                '>
+
+                {bridge}
+
+                </a>
+
+                """
+
+    return f"""
+
+    <body style='
+    background:#eef2f7;
+    font-family:Arial;
+    padding:20px;
+    '>
+
+    <a href='/home'
+    style='
+    display:inline-block;
+    background:#1f3c88;
+    color:white;
+    padding:12px 20px;
+    border-radius:10px;
+    text-decoration:none;
+    margin-bottom:20px;
+    '>
+
+    戻る
+
+    </a>
+
+    <h1>入力情報一覧</h1>
+
+    {html}
+
+    </body>
+
+    """
+
+# =====================================
 # 橋詳細
-# ====================================
+# =====================================
 
 @app.route("/bridge/<bridge>")
 def bridge_page(bridge):
@@ -344,7 +597,20 @@ def bridge_page(bridge):
 
     for part in parts:
 
-        html += f"<h2>{part}</h2>"
+        html += f"""
+
+        <h2 style='
+        background:#1f3c88;
+        color:white;
+        padding:15px;
+        border-radius:10px;
+        '>
+
+        {part}
+
+        </h2>
+
+        """
 
         part_df = df[df["part"] == part]
 
@@ -356,15 +622,28 @@ def bridge_page(bridge):
 
         for lot in lots:
 
-            html += f"<h3>{lot}ロット</h3>"
+            html += f"""
 
-            lot_df = part_df[part_df["lot"] == lot]
+            <details style='margin-bottom:20px;'>
 
-            html += """
+            <summary style='
+            font-size:24px;
+            font-weight:bold;
+            cursor:pointer;
+            '>
 
-            <table border="1" cellpadding="10">
+            {lot}ロット
 
-            <tr>
+            </summary>
+
+            <table style='
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+            margin-top:15px;
+            '>
+
+            <tr style='background:#dfe7ff;'>
 
             <th>測点</th>
             <th>工程</th>
@@ -376,6 +655,8 @@ def bridge_page(bridge):
 
             """
 
+            lot_df = part_df[part_df["lot"] == lot]
+
             previous = None
 
             for i,row in lot_df.iterrows():
@@ -383,7 +664,10 @@ def bridge_page(bridge):
                 thickness = int(row["thickness"])
 
                 increase = "-"
+
                 result = "-"
+
+                color = "black"
 
                 if previous is not None:
 
@@ -400,9 +684,13 @@ def bridge_page(bridge):
 
                         result = "○"
 
+                        color = "green"
+
                     else:
 
                         result = "✕"
+
+                        color = "red"
 
                 previous = thickness
 
@@ -410,23 +698,79 @@ def bridge_page(bridge):
 
                 <tr>
 
-                <td>{row["point"]}</td>
-                <td>{row["process"]}</td>
-                <td>{thickness}</td>
-                <td>{increase}</td>
-                <td>{result}</td>
+                <td style='padding:10px;border:1px solid #ccc;'>
+
+                {row["point"]}
+
+                </td>
+
+                <td style='padding:10px;border:1px solid #ccc;'>
+
+                {row["process"]}
+
+                </td>
+
+                <td style='padding:10px;border:1px solid #ccc;'>
+
+                {thickness}μ
+
+                </td>
+
+                <td style='padding:10px;border:1px solid #ccc;'>
+
+                {increase}
+
+                </td>
+
+                <td style='
+                padding:10px;
+                border:1px solid #ccc;
+                color:{color};
+                font-weight:bold;
+                '>
+
+                {result}
+
+                </td>
 
                 </tr>
 
                 """
 
-            html += "</table><br>"
+            html += "</table></details>"
 
-    return html
+    return f"""
 
-# ====================================
+    <body style='
+    background:#eef2f7;
+    font-family:Arial;
+    padding:20px;
+    '>
+
+    <a href='/list'
+    style='
+    display:inline-block;
+    background:#1f3c88;
+    color:white;
+    padding:12px 20px;
+    border-radius:10px;
+    text-decoration:none;
+    margin-bottom:20px;
+    '>
+
+    戻る
+
+    </a>
+
+    {html}
+
+    </body>
+
+    """
+
+# =====================================
 # 起動
-# ====================================
+# =====================================
 
 if __name__ == "__main__":
     app.run(debug=True)
