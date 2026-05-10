@@ -2,13 +2,15 @@
 # 橋梁膜厚管理 完全版
 # =====================================================
 
-from flask import Flask, request, redirect, render_template_string
+from flask import Flask, request, redirect, render_template_string, session
 from supabase import create_client
 from datetime import datetime
-import csv
 import io
+import csv
 
 app = Flask(__name__)
+
+app.secret_key = "sakura6788"
 
 # =====================================================
 # Supabase
@@ -137,6 +139,10 @@ def login():
         password = request.form.get("pw")
 
         if user_id in users and users[user_id] == password:
+
+            session["login"] = True
+            session["user"] = user_id
+
             return redirect("/")
 
     return """
@@ -144,6 +150,7 @@ def login():
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 
@@ -172,7 +179,7 @@ h1{
 
 input{
     width:100%;
-    height:46px;
+    height:48px;
     margin-top:15px;
     padding:10px;
     border:none;
@@ -180,11 +187,12 @@ input{
     background:#1e293b;
     color:white;
     box-sizing:border-box;
+    font-size:16px;
 }
 
 button{
     width:100%;
-    padding:12px;
+    padding:14px;
     margin-top:20px;
     border:none;
     border-radius:12px;
@@ -202,7 +210,7 @@ button{
 
 <div class='login-box'>
 
-<h1>ログイン</h1>
+<h1>橋梁膜厚管理</h1>
 
 <form method='POST'>
 
@@ -228,6 +236,9 @@ button{
 @app.route("/", methods=["GET","POST"])
 def home():
 
+    if not session.get("login"):
+        return redirect("/login")
+
     if request.method == "POST":
 
         process = request.form.get("process")
@@ -238,20 +249,32 @@ def home():
         result = "OK"
 
         if thickness:
+
             if int(thickness) < standard:
                 result = "NG"
 
         data = {
+
             "datetime": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "user_name": "敦司",
+
+            "user_name": session.get("user"),
+
             "site": request.form.get("site"),
+
             "bridge": request.form.get("bridge"),
+
             "place": request.form.get("place"),
+
             "part": request.form.get("part"),
+
             "lot": request.form.get("lot"),
+
             "point": request.form.get("point"),
+
             "process": process,
+
             "thickness": thickness,
+
             "result": result
         }
 
@@ -259,13 +282,19 @@ def home():
 
         return redirect("/")
 
-    return render_template_string(f"""
+    bridge_html = ""
+
+    for bridge in bridges["ミカドR6-1"]:
+        bridge_html += f"<option>{bridge}</option>"
+
+    return f"""
 
 <!DOCTYPE html>
 <html>
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>橋梁膜厚管理</title>
@@ -313,25 +342,25 @@ label{{
 
 input,select{{
     width:100%;
-    height:46px;
+    height:48px;
     padding:10px;
     border:none;
     border-radius:10px;
     background:#1e293b;
     color:white;
-    font-size:17px;
+    font-size:16px;
     box-sizing:border-box;
 }}
 
 button{{
     width:100%;
-    padding:12px;
+    padding:14px;
     margin-top:18px;
     border:none;
     border-radius:14px;
     background:linear-gradient(90deg,#2563eb,#06b6d4);
     color:white;
-    font-size:20px;
+    font-size:18px;
     font-weight:bold;
 }}
 
@@ -358,59 +387,79 @@ button{{
 <label>現場名</label>
 
 <select name="site">
+
 {''.join([f'<option>{x}</option>' for x in sites])}
+
 </select>
 
 <label>橋名</label>
 
 <select name="bridge">
-{''.join([f'<option>{x}</option>' for x in bridges["ミカドR6-1"]])}
+
+{bridge_html}
+
 </select>
 
 <label>箇所</label>
 
 <select name="place">
+
 {''.join([f'<option>{x}</option>' for x in places])}
+
 </select>
 
 <label>部位</label>
 
 <select name="part">
+
 {''.join([f'<option>{x}</option>' for x in parts])}
+
 </select>
 
 <label>ロット</label>
 
 <select name="lot">
+
 {''.join([f'<option>{x}</option>' for x in lots])}
+
 </select>
 
 <label>測点</label>
 
 <select name="point">
+
 {''.join([f'<option>{x}</option>' for x in points])}
+
 </select>
 
 <label>工程</label>
 
 <select name="process">
+
 {''.join([f'<option>{x}</option>' for x in processes])}
+
 </select>
 
 <label>膜厚</label>
 
 <input type="number" name="thickness" required>
 
-<button type="submit">保存</button>
+<button type="submit">
+保存
+</button>
 
 </form>
 
 <a href="/list">
-<button class="subbtn">入力情報一覧</button>
+<button class="subbtn">
+入力情報一覧
+</button>
 </a>
 
 <a href="/backup">
-<button class="subbtn">CSVバックアップ</button>
+<button class="subbtn">
+CSVバックアップ
+</button>
 </a>
 
 </div>
@@ -419,7 +468,7 @@ button{{
 </body>
 </html>
 
-""")
+"""
 
 # =====================================================
 # 一覧
@@ -428,40 +477,121 @@ button{{
 @app.route("/list")
 def list_page():
 
-    rows = supabase.table("data").select("*").order("id", desc=True).execute().data
+    if not session.get("login"):
+        return redirect("/login")
+
+    rows = supabase.table("data").select("*").order("id").execute().data
 
     html = ""
 
+    bridge_names = []
+
     for row in rows:
 
-        result = row.get("result","")
+        bridge = row.get("bridge")
 
-        color = "#22c55e"
+        if bridge not in bridge_names:
+            bridge_names.append(bridge)
 
-        if result == "NG":
-            color = "#ef4444"
+    for bridge in bridge_names:
 
         html += f"""
 
+<div class='bridge-title'>
+{bridge}
+</div>
+
+"""
+
+        bridge_rows = [x for x in rows if x.get("bridge") == bridge]
+
+        part_names = []
+
+        for row in bridge_rows:
+
+            part = row.get("part")
+
+            if part not in part_names:
+                part_names.append(part)
+
+        for part in part_names:
+
+            html += f"""
+
+<div class='part-title'>
+{part}
+</div>
+
+"""
+
+            part_rows = [x for x in bridge_rows if x.get("part") == part]
+
+            lot_names = []
+
+            for row in part_rows:
+
+                lot = row.get("lot")
+
+                if lot not in lot_names:
+                    lot_names.append(lot)
+
+            for lot in lot_names:
+
+                html += f"""
+
+<div class='lot-title'>
+{lot}ロット
+</div>
+
+<table>
+
+<tr>
+<th>ID</th>
+<th>日時</th>
+<th>箇所</th>
+<th>工程</th>
+<th>膜厚</th>
+<th>判定</th>
+</tr>
+
+"""
+
+                lot_rows = [x for x in part_rows if x.get("lot") == lot]
+
+                for row in lot_rows:
+
+                    result = row.get("result","")
+
+                    color = "#22c55e"
+
+                    if result == "NG":
+                        color = "#ef4444"
+
+                    html += f"""
+
 <tr>
 
+<td>{row.get('id','')}</td>
+
 <td>{row.get('datetime','')}</td>
-<td>{row.get('site','')}</td>
-<td>{row.get('bridge','')}</td>
+
 <td>{row.get('place','')}</td>
-<td>{row.get('part','')}</td>
-<td>{row.get('lot','')}</td>
-<td>{row.get('point','')}</td>
+
 <td>{row.get('process','')}</td>
+
 <td>{row.get('thickness','')}</td>
 
 <td style='color:{color};font-weight:bold;'>
+
 {result}
+
 </td>
 
 </tr>
 
 """
+
+                html += "</table>"
 
     return f"""
 
@@ -470,46 +600,64 @@ def list_page():
 <head>
 
 <meta charset='UTF-8'>
+
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 
 <style>
 
 body{{
     margin:0;
-    background:#020b22;
-    color:white;
+    background:#d1d5db;
     font-family:Arial;
-    padding:10px;
+    padding:15px;
 }}
 
-h1{{
-    text-align:center;
-    color:#38bdf8;
+.bridge-title{{
+    font-size:26px;
+    font-weight:bold;
+    margin-top:20px;
+    margin-bottom:15px;
 }}
 
-.table-wrap{{
-    overflow-x:auto;
+.part-title{{
+    background:#1e3a8a;
+    color:white;
+    padding:15px;
+    border-radius:12px;
+    font-size:22px;
+    font-weight:bold;
+    margin-top:20px;
+}}
+
+.lot-title{{
+    color:#1e3a8a;
+    font-size:18px;
+    font-weight:bold;
+    margin-top:25px;
+    margin-bottom:10px;
 }}
 
 table{{
     width:100%;
     border-collapse:collapse;
+    margin-bottom:20px;
+    background:white;
 }}
 
 th,td{{
-    border:1px solid #1e3a8a;
-    padding:8px;
+    border:1px solid #d1d5db;
+    padding:10px;
     text-align:center;
-    font-size:12px;
+    font-size:14px;
 }}
 
 th{{
-    background:#2563eb;
+    background:#c7d2fe;
 }}
 
 button{{
     width:100%;
-    padding:12px;
+    padding:14px;
     margin-top:20px;
     border:none;
     border-radius:12px;
@@ -525,33 +673,12 @@ button{{
 
 <body>
 
-<h1>入力情報一覧</h1>
-
-<div class='table-wrap'>
-
-<table>
-
-<tr>
-<th>日時</th>
-<th>現場</th>
-<th>橋名</th>
-<th>箇所</th>
-<th>部位</th>
-<th>ロット</th>
-<th>測点</th>
-<th>工程</th>
-<th>膜厚</th>
-<th>判定</th>
-</tr>
-
 {html}
 
-</table>
-
-</div>
-
 <a href="/">
-<button>戻る</button>
+<button>
+戻る
+</button>
 </a>
 
 </body>
@@ -565,6 +692,9 @@ button{{
 
 @app.route("/backup")
 def backup():
+
+    if not session.get("login"):
+        return redirect("/login")
 
     rows = supabase.table("data").select("*").execute().data
 
@@ -581,7 +711,8 @@ def backup():
         "lot",
         "point",
         "process",
-        "thickness"
+        "thickness",
+        "result"
     ])
 
     for row in rows:
@@ -595,7 +726,8 @@ def backup():
             row.get("lot",""),
             row.get("point",""),
             row.get("process",""),
-            row.get("thickness","")
+            row.get("thickness",""),
+            row.get("result","")
         ])
 
     return f"""
@@ -633,13 +765,26 @@ textarea{{
 <h1>CSVバックアップ</h1>
 
 <textarea>
+
 {output.getvalue()}
+
 </textarea>
 
 </body>
 </html>
 
 """
+
+# =====================================================
+# LOGOUT
+# =====================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect("/login")
 
 # =====================================================
 # 起動
