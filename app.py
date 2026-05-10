@@ -606,8 +606,8 @@ margin:0;
     value="{row['thickness']}"
     style='
     width:100%;
-    height:52px;
-    padding:14px;
+    height:46px;
+    padding:10px;
     border:none;
     border-radius:10px;
 
