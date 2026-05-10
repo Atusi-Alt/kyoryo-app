@@ -1,6 +1,5 @@
 # =====================================================
-# 橋梁膜厚管理 完全版
-# 全層前層差自動計算対応
+# 橋梁膜厚管理 完全版 安定版
 # =====================================================
 
 from flask import Flask, request, redirect, render_template_string, session
@@ -10,7 +9,7 @@ import json
 
 app = Flask(__name__)
 
-app.secret_key = "sakura6788"
+app.secret_key = "sakura"
 
 # =====================================================
 # SUPABASE
@@ -46,22 +45,46 @@ sites = [
 bridges = {
 
     "ミカドR6-1":[
-        "I 1-286","I 2-286",
-        "I 1-287","I 2-287",
-        "I 1-288","I 2-288",
-        "I 1-289","I 2-289",
-        "I 1-290","I 2-290",
-        "I 1-291","I 2-291",
-        "I 1-292","I 2-292",
-        "I-287","I-288","I-289",
-        "I-290","I-291","I-292"
+
+        "I 1-286",
+        "I 2-286",
+        "I 1-287",
+        "I 2-287",
+        "I 1-288",
+        "I 2-288",
+        "I 1-289",
+        "I 2-289",
+        "I 1-290",
+        "I 2-290",
+        "I 1-291",
+        "I 2-291",
+        "I 1-292",
+        "I 2-292",
+        "I-287",
+        "I-288",
+        "I-289",
+        "I-290",
+        "I-291",
+        "I-292"
     ],
 
     "ミカドR6-2":[
-        "Ⅱ 1-144","Ⅱ 2-144","入-144",
-        "Ⅱ 1-145","Ⅱ 2-145","入-145",
-        "Ⅱ 1-146","Ⅱ 2-146","入-146",
-        "Ⅱ-145","Ⅱ-146","Ⅱ-147"
+
+        "Ⅱ 1-144",
+        "Ⅱ 2-144",
+        "入-144",
+
+        "Ⅱ 1-145",
+        "Ⅱ 2-145",
+        "入-145",
+
+        "Ⅱ 1-146",
+        "Ⅱ 2-146",
+        "入-146",
+
+        "Ⅱ-145",
+        "Ⅱ-146",
+        "Ⅱ-147"
     ]
 }
 
@@ -79,6 +102,7 @@ parts = [
 ]
 
 processes = [
+
     "防食下地",
     "下塗1",
     "増し塗1",
@@ -90,6 +114,7 @@ processes = [
 ]
 
 standards = {
+
     "防食下地":75,
     "下塗1":60,
     "増し塗1":60,
@@ -128,7 +153,8 @@ def login():
 
 <meta charset='UTF-8'>
 
-<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<meta name='viewport'
+content='width=device-width, initial-scale=1.0'>
 
 <style>
 
@@ -189,10 +215,14 @@ h1{
 
 <input name='id' placeholder='ID'>
 
-<input type='password' name='pw' placeholder='パスワード'>
+<input type='password'
+name='pw'
+placeholder='パスワード'>
 
 <button type='submit'>
+
 ログイン
+
 </button>
 
 </form>
@@ -206,6 +236,17 @@ h1{
 """
 
 # =====================================================
+# LOGOUT
+# =====================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect("/login")
+
+# =====================================================
 # HOME
 # =====================================================
 
@@ -216,81 +257,6 @@ def home():
         return redirect("/login")
 
     if request.method == "POST":
-
-        process = request.form.get("process")
-
-        thickness = int(request.form.get("thickness"))
-
-        standard = standards.get(process,0)
-
-        # =================================================
-        # 前層設定
-        # =================================================
-
-        previous_process_map = {
-
-            "防食下地": None,
-
-            "下塗1": "防食下地",
-
-            "増し塗1": "下塗1",
-
-            "増し塗2": "増し塗1",
-
-            "下塗2": "増し塗2",
-
-            "中塗": "下塗2",
-
-            "上塗": "中塗",
-
-            "補修塗": "上塗"
-        }
-
-        previous_process = previous_process_map.get(process)
-
-        previous_thickness = 0
-
-        difference = 0
-
-        # =================================================
-        # 前層検索
-        # =================================================
-
-        if previous_process:
-
-            previous_data = supabase.table("data")\
-                .select("*")\
-                .eq("bridge", request.form.get("bridge"))\
-                .eq("part", request.form.get("part"))\
-                .eq("lot", request.form.get("lot"))\
-                .eq("point", request.form.get("point"))\
-                .eq("process", previous_process)\
-                .order("id", desc=True)\
-                .limit(1)\
-                .execute()
-
-            if previous_data.data:
-
-                previous_thickness = int(
-                    previous_data.data[0]["thickness"]
-                )
-
-                difference = (
-                    thickness - previous_thickness
-                )
-
-        # =================================================
-        # 判定
-        # =================================================
-
-        result = "OK"
-
-        if thickness < standard:
-            result = "NG"
-
-        # =================================================
-        # 保存
-        # =================================================
 
         data = {
 
@@ -319,22 +285,10 @@ def home():
             request.form.get("point"),
 
             "process":
-            process,
+            request.form.get("process"),
 
             "thickness":
-            thickness,
-
-            "previous_process":
-            previous_process,
-
-            "previous_thickness":
-            previous_thickness,
-
-            "difference":
-            difference,
-
-            "result":
-            result
+            request.form.get("thickness")
         }
 
         supabase.table("data").insert(data).execute()
@@ -349,9 +303,10 @@ def home():
 
 <head>
 
-<meta charset="UTF-8">
+<meta charset='UTF-8'>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name='viewport'
+content='width=device-width, initial-scale=1.0'>
 
 <style>
 
@@ -437,7 +392,9 @@ button{
 
 <label>現場名</label>
 
-<select id="site" name="site" onchange="changeBridge()">
+<select id="site"
+name="site"
+onchange="changeBridge()">
 
 <option>ミカドR6-1</option>
 <option>ミカドR6-2</option>
@@ -474,7 +431,9 @@ button{
 <select name="lot">
 
 {% for i in range(1,51) %}
+
 <option>{{i}}</option>
+
 {% endfor %}
 
 </select>
@@ -484,7 +443,9 @@ button{
 <select name="point">
 
 {% for i in range(1,26) %}
+
 <option>{{i}}</option>
+
 {% endfor %}
 
 </select>
@@ -506,24 +467,36 @@ button{
 
 <label>膜厚</label>
 
-<input type="number" name="thickness" required>
+<input type="number"
+name="thickness"
+required>
 
 <button type="submit">
+
 保存
+
 </button>
 
 </form>
 
 <a href="/list">
+
 <button class="subbtn">
+
 入力情報一覧
+
 </button>
+
 </a>
 
 <a href="/logout">
+
 <button class="subbtn">
+
 ログアウト
+
 </button>
+
 </a>
 
 </div>
@@ -536,17 +509,21 @@ const bridges = {{ bridges|safe }}
 
 function changeBridge(){
 
-    let site = document.getElementById("site").value
+    let site =
+    document.getElementById("site").value
 
-    let bridgeSelect = document.getElementById("bridge")
+    let bridgeSelect =
+    document.getElementById("bridge")
 
     bridgeSelect.innerHTML = ""
 
     bridges[site].forEach(function(bridge){
 
-        let option = document.createElement("option")
+        let option =
+        document.createElement("option")
 
         option.value = bridge
+
         option.text = bridge
 
         bridgeSelect.appendChild(option)
@@ -574,7 +551,22 @@ def list_page():
     if not session.get("login"):
         return redirect("/login")
 
-    rows = supabase.table("data").select("*").order("id").execute().data
+    rows = supabase.table("data")\
+        .select("*")\
+        .order("id")\
+        .execute().data
+
+    process_order = {
+
+        "防食下地":0,
+        "下塗1":1,
+        "増し塗1":2,
+        "増し塗2":3,
+        "下塗2":4,
+        "中塗":5,
+        "上塗":6,
+        "補修塗":7
+    }
 
     html = ""
 
@@ -589,13 +581,26 @@ def list_page():
 
     for bridge in bridge_names:
 
-        html += f"<h1>{bridge}</h1>"
+        html += f"""
 
-        bridge_rows = [x for x in rows if x.get("bridge") == bridge]
+<h1 style='font-size:50px;'>
+
+{bridge}
+
+</h1>
+
+"""
+
+        bridge_rows = [
+
+            x for x in rows
+            if x.get("bridge") == bridge
+        ]
 
         for part in parts:
 
             part_rows = [
+
                 x for x in bridge_rows
                 if x.get("part") == part
             ]
@@ -607,8 +612,8 @@ def list_page():
 
 <h2 style='background:#1e3a8a;
 color:white;
-padding:12px;
-border-radius:10px;'>
+padding:18px;
+border-radius:16px;'>
 
 {part}
 
@@ -631,9 +636,9 @@ border-radius:10px;'>
 
 <details>
 
-<summary style='font-size:22px;
+<summary style='font-size:28px;
 font-weight:bold;
-margin-top:10px;'>
+margin-top:20px;'>
 
 {lot}ロット
 
@@ -642,9 +647,9 @@ margin-top:10px;'>
 <div style='overflow-x:auto;'>
 
 <table style='width:100%;
-min-width:1200px;
-border-collapse:collapse;
+min-width:1400px;
 background:white;
+border-collapse:collapse;
 margin-top:10px;'>
 
 <tr>
@@ -665,13 +670,44 @@ margin-top:10px;'>
 """
 
                 lot_rows = [
+
                     x for x in part_rows
                     if x.get("lot") == lot
                 ]
 
+                lot_rows.sort(
+                    key=lambda x:
+                    process_order.get(
+                        x.get("process"),99
+                    )
+                )
+
+                previous_thickness = 0
+
                 for row in lot_rows:
 
-                    result = row.get("result","")
+                    process = row.get("process","")
+
+                    thickness = int(
+                        row.get("thickness",0)
+                    )
+
+                    standard = standards.get(process,0)
+
+                    result = "OK"
+
+                    if thickness < standard:
+                        result = "NG"
+
+                    difference = (
+                        thickness -
+                        previous_thickness
+                    )
+
+                    if process == "防食下地":
+                        difference = 0
+
+                    previous_thickness = thickness
 
                     color = "green"
 
@@ -690,11 +726,11 @@ margin-top:10px;'>
 
 <td>{row.get('place','')}</td>
 
-<td>{row.get('process','')}</td>
+<td>{process}</td>
 
-<td>{row.get('thickness','')}μ</td>
+<td>{thickness}μ</td>
 
-<td>{row.get('difference',0)}μ</td>
+<td>{difference}μ</td>
 
 <td style='color:{color};
 font-weight:bold;'>
@@ -706,7 +742,13 @@ font-weight:bold;'>
 <td>
 
 <a href='/edit/{row['id']}'>
-<button>編集</button>
+
+<button>
+
+編集
+
+</button>
+
 </a>
 
 </td>
@@ -714,9 +756,13 @@ font-weight:bold;'>
 <td>
 
 <a href='/delete/{row['id']}'>
+
 <button style='background:red;'>
+
 削除
+
 </button>
+
 </a>
 
 </td>
@@ -759,7 +805,7 @@ body{{
 
 th,td{{
     border:1px solid #ccc;
-    padding:10px;
+    padding:12px;
     text-align:center;
     white-space:nowrap;
 }}
@@ -769,7 +815,7 @@ th{{
 }}
 
 button{{
-    padding:8px 12px;
+    padding:10px 14px;
     border:none;
     border-radius:8px;
     background:#2563eb;
@@ -778,8 +824,9 @@ button{{
 
 .main-btn{{
     width:100%;
-    padding:14px;
+    padding:18px;
     margin-bottom:20px;
+    font-size:20px;
 }}
 
 </style>
@@ -788,10 +835,14 @@ button{{
 
 <body>
 
-<a href="/">
+<a href='/'>
+
 <button class='main-btn'>
+
 戻る
+
 </button>
+
 </a>
 
 {html}
@@ -816,24 +867,13 @@ def edit(id):
 
     if request.method == "POST":
 
-        process = request.form.get("process")
-
-        thickness = int(request.form.get("thickness"))
-
-        standard = standards.get(process,0)
-
-        result = "OK"
-
-        if thickness < standard:
-            result = "NG"
-
         supabase.table("data").update({
 
-            "process":process,
+            "process":
+            request.form.get("process"),
 
-            "thickness":thickness,
-
-            "result":result
+            "thickness":
+            request.form.get("thickness")
 
         }).eq("id", id).execute()
 
@@ -941,7 +981,9 @@ name='thickness'
 value='{row['thickness']}'>
 
 <button type='submit'>
+
 更新
+
 </button>
 
 </form>
@@ -977,17 +1019,6 @@ def delete(id):
         .execute()
 
     return redirect("/list")
-
-# =====================================================
-# LOGOUT
-# =====================================================
-
-@app.route("/logout")
-def logout():
-
-    session.clear()
-
-    return redirect("/login")
 
 # =====================================================
 # RUN
