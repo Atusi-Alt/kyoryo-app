@@ -1,5 +1,5 @@
 # =====================================================
-# 橋梁膜厚管理 完全版
+# 橋梁膜厚管理 完全完成版
 # =====================================================
 
 from flask import Flask, request, redirect, render_template_string, session
@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = "sakura6788"
 
 # =====================================================
-# Supabase
+# SUPABASE
 # =====================================================
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
@@ -22,7 +22,7 @@ key = "sb_publishable_Z-nEPLmqRbLV_kWy_lW0GA_b7DC-EIn"
 supabase = create_client(url, key)
 
 # =====================================================
-# ログイン
+# LOGIN USER
 # =====================================================
 
 users = {
@@ -34,7 +34,7 @@ users = {
 }
 
 # =====================================================
-# データ
+# MASTER
 # =====================================================
 
 sites = [
@@ -96,9 +96,9 @@ parts = [
     "一種部"
 ]
 
-lots = [str(i) for i in range(1, 51)]
+lots = [str(i) for i in range(1,51)]
 
-points = [str(i) for i in range(1, 26)]
+points = [str(i) for i in range(1,26)]
 
 processes = [
     "防食下地",
@@ -112,7 +112,7 @@ processes = [
 ]
 
 # =====================================================
-# 判定基準
+# STANDARD
 # =====================================================
 
 standards = {
@@ -147,10 +147,13 @@ def login():
     return """
 
 <!DOCTYPE html>
+
 <html>
+
 <head>
 
 <meta charset='UTF-8'>
+
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 
 <style>
@@ -166,7 +169,7 @@ body{
     max-width:400px;
     margin:120px auto;
     background:#081229;
-    border-radius:18px;
+    border-radius:20px;
     padding:25px;
     border:1px solid #16325c;
 }
@@ -185,8 +188,8 @@ input{
     border-radius:10px;
     background:#1e293b;
     color:white;
-    box-sizing:border-box;
     font-size:16px;
+    box-sizing:border-box;
 }
 
 button{
@@ -217,13 +220,16 @@ button{
 
 <input type='password' name='pw' placeholder='パスワード'>
 
-<button type='submit'>ログイン</button>
+<button type='submit'>
+ログイン
+</button>
 
 </form>
 
 </div>
 
 </body>
+
 </html>
 
 """
@@ -241,16 +247,15 @@ def home():
     if request.method == "POST":
 
         process = request.form.get("process")
+
         thickness = request.form.get("thickness")
 
-        standard = standards.get(process, 0)
+        standard = standards.get(process,0)
 
         result = "OK"
 
-        if thickness:
-
-            if int(thickness) < standard:
-                result = "NG"
+        if int(thickness) < standard:
+            result = "NG"
 
         data = {
 
@@ -284,7 +289,9 @@ def home():
     return render_template_string("""
 
 <!DOCTYPE html>
+
 <html>
+
 <head>
 
 <meta charset="UTF-8">
@@ -298,13 +305,13 @@ def home():
 body{
     margin:0;
     background:#020b22;
-    font-family:Arial,sans-serif;
+    font-family:Arial;
     color:white;
 }
 
 .header{
     background:linear-gradient(90deg,#2563eb,#06b6d4);
-    padding:16px;
+    padding:18px;
     text-align:center;
     font-size:24px;
     font-weight:bold;
@@ -312,7 +319,7 @@ body{
 }
 
 .container{
-    max-width:600px;
+    max-width:650px;
     margin:10px auto;
     padding:10px;
 }
@@ -320,8 +327,8 @@ body{
 .card{
     background:#081229;
     border:1px solid #16325c;
-    border-radius:18px;
-    padding:18px;
+    border-radius:20px;
+    padding:20px;
 }
 
 label{
@@ -335,7 +342,7 @@ label{
 
 input,select{
     width:100%;
-    height:50px;
+    height:52px;
     padding:10px;
     border:none;
     border-radius:10px;
@@ -368,7 +375,9 @@ button{
 <body>
 
 <div class="header">
+
 橋梁膜厚管理
+
 </div>
 
 <div class="container">
@@ -457,18 +466,23 @@ button{
 </form>
 
 <a href="/list">
+
 <button class="subbtn">
 入力情報一覧
 </button>
+
 </a>
 
 <a href="/logout">
+
 <button class="subbtn">
 ログアウト
 </button>
+
 </a>
 
 </div>
+
 </div>
 
 <script>
@@ -500,12 +514,13 @@ changeBridge()
 </script>
 
 </body>
+
 </html>
 
 """, bridges=json.dumps(bridges))
 
 # =====================================================
-# 一覧
+# LIST
 # =====================================================
 
 @app.route("/list")
@@ -533,7 +548,9 @@ def list_page():
 
 <details class='bridge-box'>
 
-<summary>{bridge}</summary>
+<summary class='bridge-summary'>
+{bridge}
+</summary>
 
 """
 
@@ -552,9 +569,11 @@ def list_page():
 
             html += f"""
 
-<div class='part-title'>
+<details class='part-box'>
+
+<summary class='part-title'>
 {part}
-</div>
+</summary>
 
 """
 
@@ -575,19 +594,26 @@ def list_page():
 
 <details class='lot-box'>
 
-<summary>{lot}ロット</summary>
+<summary class='lot-title'>
+{lot}ロット
+</summary>
+
+<div class='table-wrap'>
 
 <table>
 
 <tr>
-<th>ID</th>
+
+<th>測点</th>
 <th>日時</th>
+<th>入力者</th>
 <th>箇所</th>
 <th>工程</th>
 <th>膜厚</th>
 <th>判定</th>
 <th>編集</th>
 <th>削除</th>
+
 </tr>
 
 """
@@ -607,9 +633,11 @@ def list_page():
 
 <tr>
 
-<td>{row.get('id','')}</td>
+<td>{row.get('point','')}</td>
 
 <td>{row.get('datetime','')}</td>
+
+<td>{row.get('user_name','')}</td>
 
 <td>{row.get('place','')}</td>
 
@@ -655,16 +683,22 @@ def list_page():
 
 </table>
 
+</div>
+
 </details>
 
 """
+
+            html += "</details>"
 
         html += "</details>"
 
     return f"""
 
 <!DOCTYPE html>
+
 <html>
+
 <head>
 
 <meta charset='UTF-8'>
@@ -682,41 +716,53 @@ body{{
 
 .bridge-box{{
     background:white;
-    border-radius:16px;
+    border-radius:20px;
     margin-bottom:20px;
-    padding:10px;
+    padding:15px;
 }}
 
-.bridge-box summary{{
+.bridge-summary{{
+    font-size:34px;
+    font-weight:bold;
+    cursor:pointer;
+    list-style:none;
+}}
+
+.part-box{{
+    margin-top:20px;
+}}
+
+.part-title{{
+    background:#1e3a8a;
+    color:white;
+    padding:16px;
+    border-radius:12px;
     font-size:28px;
     font-weight:bold;
     cursor:pointer;
     list-style:none;
 }}
 
-.part-title{{
-    background:#1e3a8a;
-    color:white;
-    padding:14px;
-    border-radius:10px;
-    font-size:22px;
-    font-weight:bold;
-    margin-top:20px;
-}}
-
 .lot-box{{
     margin-top:20px;
 }}
 
-.lot-box summary{{
-    font-size:20px;
+.lot-title{{
+    font-size:22px;
     font-weight:bold;
     color:#1e3a8a;
     cursor:pointer;
+    list-style:none;
+}}
+
+.table-wrap{{
+    width:100%;
+    overflow-x:auto;
 }}
 
 table{{
     width:100%;
+    min-width:1100px;
     border-collapse:collapse;
     margin-top:10px;
     background:white;
@@ -724,9 +770,10 @@ table{{
 
 th,td{{
     border:1px solid #d1d5db;
-    padding:10px;
+    padding:12px;
     text-align:center;
     font-size:14px;
+    white-space:nowrap;
 }}
 
 th{{
@@ -750,7 +797,7 @@ th{{
     color:white;
     border:none;
     border-radius:8px;
-    padding:8px;
+    padding:8px 12px;
 }}
 
 .delete-btn{{
@@ -758,7 +805,7 @@ th{{
     color:white;
     border:none;
     border-radius:8px;
-    padding:8px;
+    padding:8px 12px;
 }}
 
 </style>
@@ -767,21 +814,24 @@ th{{
 
 <body>
 
-{html}
-
 <a href="/">
+
 <button class='main-btn'>
 戻る
 </button>
+
 </a>
 
+{html}
+
 </body>
+
 </html>
 
 """
 
 # =====================================================
-# 編集
+# EDIT
 # =====================================================
 
 @app.route("/edit/<id>", methods=["GET","POST"])
@@ -790,6 +840,7 @@ def edit(id):
     if request.method == "POST":
 
         process = request.form.get("process")
+
         thickness = request.form.get("thickness")
 
         standard = standards.get(process,0)
@@ -814,7 +865,9 @@ def edit(id):
     return f"""
 
 <!DOCTYPE html>
+
 <html>
+
 <head>
 
 <meta charset='UTF-8'>
@@ -833,7 +886,7 @@ body{{
 
 .card{{
     background:#081229;
-    border-radius:18px;
+    border-radius:20px;
     padding:20px;
 }}
 
@@ -905,12 +958,13 @@ button{{
 </div>
 
 </body>
+
 </html>
 
 """
 
 # =====================================================
-# 削除
+# DELETE
 # =====================================================
 
 @app.route("/delete/<id>")
@@ -932,7 +986,7 @@ def logout():
     return redirect("/login")
 
 # =====================================================
-# 起動
+# RUN
 # =====================================================
 
 if __name__ == "__main__":
