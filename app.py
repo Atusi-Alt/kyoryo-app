@@ -1,6 +1,6 @@
 # app.py
 
-```python
+from supabase import create_client
 from flask import Flask, request, render_template_string, redirect, session
 from supabase import create_client
 import pandas as pd
