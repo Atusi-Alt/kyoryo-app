@@ -1,18 +1,12 @@
 # =====================================================
-# 橋梁膜厚管理 Ultimate Edition
-# 現場最強UI版
+# 橋梁膜厚管理 Ultimate Master Edition
+# 完全版（機能削減なし）
 # =====================================================
 
-from flask import Flask
-from flask import request
-from flask import redirect
-from flask import render_template_string
-from flask import session
-
+from flask import Flask, request, redirect
+from flask import render_template_string, session
 from supabase import create_client
-
 from datetime import datetime
-
 import json
 
 # =====================================================
@@ -60,26 +54,13 @@ bridges = {
 
     "ミカドR6-1":[
 
-        "I 1-286",
-        "I 2-286",
-
-        "I 1-287",
-        "I 2-287",
-
-        "I 1-288",
-        "I 2-288",
-
-        "I 1-289",
-        "I 2-289",
-
-        "I 1-290",
-        "I 2-290",
-
-        "I 1-291",
-        "I 2-291",
-
-        "I 1-292",
-        "I 2-292",
+        "I 1-286","I 2-286",
+        "I 1-287","I 2-287",
+        "I 1-288","I 2-288",
+        "I 1-289","I 2-289",
+        "I 1-290","I 2-290",
+        "I 1-291","I 2-291",
+        "I 1-292","I 2-292",
 
         "I-287",
         "I-288",
@@ -138,28 +119,22 @@ processes = [
 ]
 
 # =====================================================
-# 判定基準
+# 基準
 # =====================================================
 
 standards = {
 
     "防食下地":75,
-
     "下塗1":60,
-
     "増し塗1":60,
-
     "増し塗2":60,
-
     "下塗2":60,
-
     "中塗":30,
-
     "上塗":25
 }
 
 # =====================================================
-# 部位別工程順
+# 工程順
 # =====================================================
 
 part_process_orders = {
@@ -207,7 +182,6 @@ def login():
     if request.method == "POST":
 
         user_id = request.form.get("id")
-
         password = request.form.get("pw")
 
         if user_id in users:
@@ -215,7 +189,6 @@ def login():
             if users[user_id] == password:
 
                 session["login"] = True
-
                 session["user"] = user_id
 
                 return redirect("/")
@@ -236,7 +209,6 @@ content='width=device-width, initial-scale=1.0'>
 <style>
 
 body{
-
     margin:0;
     background:#0f172a;
     color:white;
@@ -244,7 +216,6 @@ body{
 }
 
 .box{
-
     max-width:420px;
     margin:120px auto;
     background:#111827;
@@ -253,13 +224,11 @@ body{
 }
 
 h1{
-
     text-align:center;
     color:#38bdf8;
 }
 
 input{
-
     width:100%;
     height:55px;
     margin-top:15px;
@@ -273,7 +242,6 @@ input{
 }
 
 button{
-
     width:100%;
     padding:15px;
     margin-top:20px;
@@ -407,7 +375,6 @@ content='width=device-width, initial-scale=1.0'>
 <style>
 
 body{
-
     margin:0;
     background:#0f172a;
     color:white;
@@ -415,101 +382,66 @@ body{
 }
 
 .header{
-
     background:linear-gradient(
         90deg,
         #2563eb,
         #06b6d4
     );
-
     padding:18px;
-
     text-align:center;
-
     font-size:24px;
-
     font-weight:bold;
 }
 
 .container{
-
     max-width:650px;
-
     margin:auto;
-
     padding:15px;
 }
 
 .card{
-
     background:#111827;
-
     border-radius:25px;
-
     padding:22px;
 }
 
 label{
-
     display:block;
-
     margin-top:16px;
-
     margin-bottom:6px;
-
     font-weight:bold;
-
     color:#93c5fd;
 }
 
 input,select{
-
     width:100%;
-
     height:55px;
-
     padding:12px;
-
     border:none;
-
     border-radius:12px;
-
     background:#1e293b;
-
     color:white;
-
     font-size:18px;
-
     box-sizing:border-box;
 }
 
 button{
-
     width:100%;
-
     padding:15px;
-
     margin-top:18px;
-
     border:none;
-
     border-radius:14px;
-
     background:linear-gradient(
         90deg,
         #2563eb,
         #06b6d4
     );
-
     color:white;
-
     font-size:20px;
-
     font-weight:bold;
 }
 
 .sub{
-
     background:#1e293b;
 }
 
@@ -577,9 +509,7 @@ name='bridge'>
 <select name='lot'>
 
 {% for i in range(1,51) %}
-
 <option>{{i}}</option>
-
 {% endfor %}
 
 </select>
@@ -589,9 +519,7 @@ name='bridge'>
 <select name='point'>
 
 {% for i in range(1,26) %}
-
 <option>{{i}}</option>
-
 {% endfor %}
 
 </select>
@@ -600,15 +528,9 @@ name='bridge'>
 
 <select name='process'>
 
-<option>素地調整</option>
-<option>防食下地</option>
-<option>下塗1</option>
-<option>増し塗1</option>
-<option>増し塗2</option>
-<option>下塗2</option>
-<option>中塗</option>
-<option>上塗</option>
-<option>補修塗</option>
+{% for p in processes %}
+<option>{{p}}</option>
+{% endfor %}
 
 </select>
 
@@ -694,7 +616,9 @@ changeBridge()
 
 </html>
 
-""", bridges=json.dumps(bridges))
+""",
+bridges=json.dumps(bridges),
+processes=processes)
 
 # =====================================================
 # LIST
@@ -704,7 +628,6 @@ changeBridge()
 def list_page():
 
     if not session.get("login"):
-
         return redirect("/login")
 
     rows = supabase.table("data")\
@@ -730,11 +653,7 @@ def list_page():
 
 <details class='bridge'>
 
-<summary>
-
-{bridge}
-
-</summary>
+<summary>{bridge}</summary>
 
 """
 
@@ -753,18 +672,13 @@ def list_page():
             ]
 
             if not lot_rows:
-
                 continue
 
             html += f"""
 
 <details class='lot'>
 
-<summary>
-
-{lot}ロット
-
-</summary>
+<summary>{lot}ロット</summary>
 
 """
 
@@ -790,11 +704,7 @@ def list_page():
 
 <details class='point'>
 
-<summary>
-
-測点 {point}
-
-</summary>
+<summary>測点 {point}</summary>
 
 """
 
@@ -807,7 +717,6 @@ def list_page():
                     ]
 
                     if not part_rows:
-
                         continue
 
                     html += f"""
@@ -851,6 +760,16 @@ def list_page():
 
                             difference = (
                                 thickness - prev
+                            )
+
+                        target = 0
+
+                        if process in standards:
+
+                            target = (
+                                thickness -
+                                difference +
+                                standards[process]
                             )
 
                         prev = thickness
@@ -902,16 +821,18 @@ style='color:{color};'>
 
 </div>
 
+<div class='target'>
+
+目標膜厚 {target}μ
+
+</div>
+
 <div class='subdata'>
 
 {row.get('place')}
-
 ・
-
 {row.get('datetime')}
-
 ・
-
 {row.get('user_name')}
 
 </div>
@@ -966,218 +887,132 @@ content='width=device-width, initial-scale=1.0'>
 <style>
 
 body{{
-
     margin:0;
-
     background:#d1d5db;
-
     font-family:Arial;
-
     padding:15px;
 }}
 
 .main-btn{{
-
     width:100%;
-
     padding:18px;
-
     border:none;
-
     border-radius:16px;
-
     background:linear-gradient(
         90deg,
         #2563eb,
         #06b6d4
     );
-
     color:white;
-
     font-size:22px;
-
     font-weight:bold;
-
     margin-bottom:20px;
 }}
 
 .bridge{{
-
     background:white;
-
     border-radius:24px;
-
     margin-bottom:20px;
-
     padding:12px;
 }}
 
 .bridge summary{{
-
     font-size:42px;
-
     font-weight:bold;
-
     list-style:none;
-
-    cursor:pointer;
-}}
-
-.lot{{
-
-    margin-top:15px;
 }}
 
 .lot summary{{
-
     font-size:30px;
-
     font-weight:bold;
-
-    cursor:pointer;
-}}
-
-.point{{
-
-    margin-top:12px;
-
-    background:#e5e7eb;
-
-    border-radius:18px;
-
-    padding:10px;
 }}
 
 .point summary{{
-
     font-size:24px;
-
     font-weight:bold;
-
-    cursor:pointer;
 }}
 
 .part-title{{
-
     margin-top:15px;
-
     background:#1e3a8a;
-
     color:white;
-
     padding:15px;
-
     border-radius:14px;
-
     font-size:24px;
-
     font-weight:bold;
 }}
 
 .process-card{{
-
     background:white;
-
     border-radius:18px;
-
     padding:18px;
-
     margin-top:14px;
-
-    box-shadow:0 0 10px rgba(
-        0,0,0,0.1
-    );
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
 }}
 
 .top{{
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
 }}
 
 .process-name{{
-
     font-size:28px;
-
     font-weight:bold;
 }}
 
 .judge{{
-
     font-size:26px;
-
     font-weight:bold;
 }}
 
 .value{{
-
     margin-top:15px;
-
     font-size:34px;
-
     font-weight:bold;
 }}
 
 .difference{{
-
     margin-top:8px;
-
-    font-size:24px;
-
     color:#2563eb;
+    font-size:24px;
+    font-weight:bold;
+}}
 
+.target{{
+    margin-top:8px;
+    color:#0f766e;
+    font-size:22px;
     font-weight:bold;
 }}
 
 .subdata{{
-
     margin-top:10px;
-
     color:#6b7280;
-
     font-size:15px;
 }}
 
 .btns{{
-
     display:flex;
-
     gap:10px;
-
     margin-top:15px;
 }}
 
 .edit{{
-
-    flex:1;
-
     background:#2563eb;
 }}
 
 .delete{{
-
-    flex:1;
-
     background:#dc2626;
 }}
 
 button{{
-
     width:100%;
-
     padding:12px;
-
     border:none;
-
     border-radius:12px;
-
     color:white;
-
     font-size:18px;
-
     font-weight:bold;
 }}
 
@@ -1231,7 +1066,7 @@ def edit(id):
 
         return redirect("/list")
 
-    return f"""
+    return render_template_string("""
 
 <!DOCTYPE html>
 
@@ -1243,67 +1078,42 @@ def edit(id):
 
 <style>
 
-body{{
-
+body{
     margin:0;
-
     background:#0f172a;
-
     color:white;
-
     font-family:Arial;
-
     padding:20px;
-}}
+}
 
-.card{{
-
+.card{
     background:#111827;
-
     border-radius:20px;
-
     padding:20px;
-}}
+}
 
-input,select{{
-
+input,select{
     width:100%;
-
     height:55px;
-
     margin-top:15px;
-
     padding:12px;
-
     border:none;
-
     border-radius:12px;
-
     background:#1e293b;
-
     color:white;
-
     box-sizing:border-box;
-}}
+}
 
-button{{
-
+button{
     width:100%;
-
     padding:14px;
-
     margin-top:18px;
-
     border:none;
-
     border-radius:12px;
-
     background:#2563eb;
-
     color:white;
-
     font-size:18px;
-}}
+}
 
 </style>
 
@@ -1319,20 +1129,26 @@ button{{
 
 <select name='process'>
 
-{''.join([
+{% for p in processes %}
 
-f"<option {'selected' if row['process']==x else ''}>{x}</option>"
+<option
+{% if row.process == p %}
+selected
+{% endif %}
+>
 
-for x in processes
+{{p}}
 
-])}
+</option>
+
+{% endfor %}
 
 </select>
 
 <input
 type='number'
 name='thickness'
-value='{row['thickness']}'>
+value='{{row.thickness}}'>
 
 <button type='submit'>
 
@@ -1358,7 +1174,9 @@ value='{row['thickness']}'>
 
 </html>
 
-"""
+""",
+row=row,
+processes=processes)
 
 # =====================================================
 # DELETE
