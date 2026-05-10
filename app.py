@@ -1,11 +1,20 @@
 # =====================================================
-# 橋梁膜厚管理 完全版 安定版
+# 橋梁膜厚管理 完全版 FINAL
 # =====================================================
 
-from flask import Flask, request, redirect, render_template_string, session
+from flask import Flask, request, redirect
+from flask import render_template_string
+from flask import session
+
 from supabase import create_client
+
 from datetime import datetime
+
 import json
+
+# =====================================================
+# APP
+# =====================================================
 
 app = Flask(__name__)
 
@@ -26,6 +35,7 @@ supabase = create_client(url, key)
 # =====================================================
 
 users = {
+
     "敦司":"6788",
     "furui":"6788",
     "tsuchiya":"6788",
@@ -38,6 +48,7 @@ users = {
 # =====================================================
 
 sites = [
+
     "ミカドR6-1",
     "ミカドR6-2"
 ]
@@ -48,18 +59,25 @@ bridges = {
 
         "I 1-286",
         "I 2-286",
+
         "I 1-287",
         "I 2-287",
+
         "I 1-288",
         "I 2-288",
+
         "I 1-289",
         "I 2-289",
+
         "I 1-290",
         "I 2-290",
+
         "I 1-291",
         "I 2-291",
+
         "I 1-292",
         "I 2-292",
+
         "I-287",
         "I-288",
         "I-289",
@@ -89,6 +107,7 @@ bridges = {
 }
 
 places = [
+
     "上部工",
     "下部工",
     "上部工内面",
@@ -96,6 +115,7 @@ places = [
 ]
 
 parts = [
+
     "一般部",
     "増し塗り部",
     "一種部"
@@ -103,6 +123,7 @@ parts = [
 
 processes = [
 
+    "素地調整",
     "防食下地",
     "下塗1",
     "増し塗1",
@@ -113,15 +134,64 @@ processes = [
     "補修塗"
 ]
 
+# =====================================================
+# 判定基準
+# =====================================================
+
 standards = {
 
     "防食下地":75,
+
     "下塗1":60,
+
     "増し塗1":60,
+
     "増し塗2":60,
+
     "下塗2":60,
+
     "中塗":30,
+
     "上塗":25
+}
+
+# =====================================================
+# 部位ごとの工程順
+# =====================================================
+
+part_process_orders = {
+
+    "一般部":{
+
+        "補修塗":0,
+        "下塗1":1,
+        "下塗2":2,
+        "中塗":3,
+        "上塗":4
+    },
+
+    "増し塗り部":{
+
+        "補修塗":0,
+        "下塗1":1,
+        "増し塗1":2,
+        "増し塗2":3,
+        "下塗2":4,
+        "中塗":5,
+        "上塗":6
+    },
+
+    "一種部":{
+
+        "素地調整":0,
+        "防食下地":1,
+        "下塗1":2,
+        "増し塗1":3,
+        "増し塗2":4,
+        "下塗2":5,
+        "中塗":6,
+        "上塗":7
+    }
 }
 
 # =====================================================
@@ -134,11 +204,13 @@ def login():
     if request.method == "POST":
 
         user_id = request.form.get("id")
+
         password = request.form.get("pw")
 
         if user_id in users and users[user_id] == password:
 
             session["login"] = True
+
             session["user"] = user_id
 
             return redirect("/")
@@ -159,21 +231,24 @@ content='width=device-width, initial-scale=1.0'>
 <style>
 
 body{
+
     margin:0;
     background:#020b22;
-    font-family:Arial;
     color:white;
+    font-family:Arial;
 }
 
 .login-box{
+
     max-width:400px;
     margin:120px auto;
     background:#081229;
-    border-radius:20px;
     padding:25px;
+    border-radius:20px;
 }
 
 input{
+
     width:100%;
     height:50px;
     margin-top:15px;
@@ -186,6 +261,7 @@ input{
 }
 
 button{
+
     width:100%;
     padding:14px;
     margin-top:20px;
@@ -198,6 +274,7 @@ button{
 }
 
 h1{
+
     text-align:center;
 }
 
@@ -254,6 +331,7 @@ def logout():
 def home():
 
     if not session.get("login"):
+
         return redirect("/login")
 
     if request.method == "POST":
@@ -311,13 +389,15 @@ content='width=device-width, initial-scale=1.0'>
 <style>
 
 body{
+
     margin:0;
     background:#020b22;
-    font-family:Arial;
     color:white;
+    font-family:Arial;
 }
 
 .header{
+
     background:#2563eb;
     padding:18px;
     text-align:center;
@@ -326,18 +406,21 @@ body{
 }
 
 .container{
+
     max-width:650px;
     margin:auto;
     padding:10px;
 }
 
 .card{
+
     background:#081229;
     border-radius:20px;
     padding:20px;
 }
 
 label{
+
     display:block;
     margin-top:15px;
     margin-bottom:5px;
@@ -345,6 +428,7 @@ label{
 }
 
 input,select{
+
     width:100%;
     height:52px;
     padding:10px;
@@ -357,6 +441,7 @@ input,select{
 }
 
 button{
+
     width:100%;
     padding:14px;
     margin-top:18px;
@@ -369,6 +454,7 @@ button{
 }
 
 .subbtn{
+
     background:#1e293b;
 }
 
@@ -454,6 +540,7 @@ onchange="changeBridge()">
 
 <select name="process">
 
+<option>素地調整</option>
 <option>防食下地</option>
 <option>下塗1</option>
 <option>増し塗1</option>
@@ -549,24 +636,13 @@ changeBridge()
 def list_page():
 
     if not session.get("login"):
+
         return redirect("/login")
 
     rows = supabase.table("data")\
         .select("*")\
         .order("id")\
         .execute().data
-
-    process_order = {
-
-        "防食下地":0,
-        "下塗1":1,
-        "増し塗1":2,
-        "増し塗2":3,
-        "下塗2":4,
-        "中塗":5,
-        "上塗":6,
-        "補修塗":7
-    }
 
     html = ""
 
@@ -577,6 +653,7 @@ def list_page():
         bridge = row.get("bridge")
 
         if bridge not in bridge_names:
+
             bridge_names.append(bridge)
 
     for bridge in bridge_names:
@@ -606,6 +683,7 @@ def list_page():
             ]
 
             if not part_rows:
+
                 continue
 
             html += f"""
@@ -628,6 +706,7 @@ border-radius:16px;'>
                 lot = row.get("lot")
 
                 if lot not in lot_names:
+
                     lot_names.append(lot)
 
             for lot in lot_names:
@@ -647,7 +726,7 @@ margin-top:20px;'>
 <div style='overflow-x:auto;'>
 
 <table style='width:100%;
-min-width:1400px;
+min-width:1300px;
 background:white;
 border-collapse:collapse;
 margin-top:10px;'>
@@ -675,14 +754,41 @@ margin-top:10px;'>
                     if x.get("lot") == lot
                 ]
 
+                current_order = part_process_orders.get(
+                    part,
+                    {}
+                )
+
                 lot_rows.sort(
+
                     key=lambda x:
-                    process_order.get(
-                        x.get("process"),99
+
+                    current_order.get(
+                        x.get("process"),
+                        99
                     )
                 )
 
-                previous_thickness = 0
+                previous_values = {}
+
+                previous_process_map = {
+
+                    "防食下地":"素地調整",
+
+                    "下塗1":"防食下地",
+
+                    "増し塗1":"下塗1",
+
+                    "増し塗2":"増し塗1",
+
+                    "下塗2":"増し塗2",
+
+                    "中塗":"下塗2",
+
+                    "上塗":"中塗",
+
+                    "補修塗":"上塗"
+                }
 
                 for row in lot_rows:
 
@@ -696,22 +802,33 @@ margin-top:10px;'>
 
                     result = "OK"
 
-                    if thickness < standard:
-                        result = "NG"
+                    if process in standards:
 
-                    difference = (
-                        thickness -
-                        previous_thickness
+                        if thickness < standard:
+
+                            result = "NG"
+
+                    difference = 0
+
+                    previous_process = previous_process_map.get(
+                        process
                     )
 
-                    if process == "防食下地":
-                        difference = 0
+                    if previous_process:
 
-                    previous_thickness = thickness
+                        if previous_process in previous_values:
+
+                            difference = (
+                                thickness -
+                                previous_values[previous_process]
+                            )
+
+                    previous_values[process] = thickness
 
                     color = "green"
 
                     if result == "NG":
+
                         color = "red"
 
                     html += f"""
@@ -797,6 +914,7 @@ content='width=device-width, initial-scale=1.0'>
 <style>
 
 body{{
+
     margin:0;
     padding:15px;
     background:#d1d5db;
@@ -804,6 +922,7 @@ body{{
 }}
 
 th,td{{
+
     border:1px solid #ccc;
     padding:12px;
     text-align:center;
@@ -811,10 +930,12 @@ th,td{{
 }}
 
 th{{
+
     background:#c7d2fe;
 }}
 
 button{{
+
     padding:10px 14px;
     border:none;
     border-radius:8px;
@@ -823,6 +944,7 @@ button{{
 }}
 
 .main-btn{{
+
     width:100%;
     padding:18px;
     margin-bottom:20px;
@@ -892,6 +1014,7 @@ def edit(id):
 <style>
 
 body{{
+
     margin:0;
     padding:20px;
     background:#020b22;
@@ -900,12 +1023,14 @@ body{{
 }}
 
 .card{{
+
     background:#081229;
     padding:20px;
     border-radius:20px;
 }}
 
 input,select{{
+
     width:100%;
     height:50px;
     margin-top:15px;
@@ -918,6 +1043,7 @@ input,select{{
 }}
 
 button{{
+
     width:100%;
     padding:14px;
     margin-top:20px;
@@ -942,37 +1068,13 @@ button{{
 
 <select name='process'>
 
-<option {'selected' if row['process']=='防食下地' else ''}>
-防食下地
-</option>
+{''.join([
 
-<option {'selected' if row['process']=='下塗1' else ''}>
-下塗1
-</option>
+f"<option {'selected' if row['process']==x else ''}>{x}</option>"
 
-<option {'selected' if row['process']=='増し塗1' else ''}>
-増し塗1
-</option>
+for x in processes
 
-<option {'selected' if row['process']=='増し塗2' else ''}>
-増し塗2
-</option>
-
-<option {'selected' if row['process']=='下塗2' else ''}>
-下塗2
-</option>
-
-<option {'selected' if row['process']=='中塗' else ''}>
-中塗
-</option>
-
-<option {'selected' if row['process']=='上塗' else ''}>
-上塗
-</option>
-
-<option {'selected' if row['process']=='補修塗' else ''}>
-補修塗
-</option>
+])}
 
 </select>
 
@@ -1025,4 +1127,5 @@ def delete(id):
 # =====================================================
 
 if __name__ == "__main__":
+
     app.run(debug=True)
