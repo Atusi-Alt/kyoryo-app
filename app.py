@@ -252,10 +252,11 @@ def home():
         box-shadow:0 0 20px #0ea5e9;
     }
 
-   .container{
-    max-width:700px;
-    margin:15px auto;
-    padding:12px;
+.container{
+    max-width:600px;
+    margin:10px auto;
+    padding:8px;
+}
 }
     }
 
@@ -271,7 +272,7 @@ def home():
         display:block;
         margin-top:15px;
         margin-bottom:8px;
-        font-size:18px;
+        font-size:16px;
         font-weight:bold;
         color:#93c5fd;
     }
@@ -288,7 +289,7 @@ def home():
     box-sizing:border-box;
 }
 button{       width:100%;
-        padding:16px;
+        padding:12px;
         margin-top:25px;
         border:none;
         border-radius:14px;
