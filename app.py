@@ -252,10 +252,11 @@ def home():
         box-shadow:0 0 20px #0ea5e9;
     }
 
-    .container{
-        max-width:900px;
-        margin:25px auto;
-        padding:20px;
+   .container{
+    max-width:700px;
+    margin:15px auto;
+    padding:12px;
+}
     }
 
     .card{
@@ -275,19 +276,18 @@ def home():
         color:#93c5fd;
     }
 
-    input,select{
-        width:100%;
-        padding:14px;
-        border:none;
-        border-radius:12px;
-        background:#1e293b;
-        color:white;
-        font-size:18px;
-        box-sizing:border-box;
-    }
-
-    button{
-        width:100%;
+   input,select{
+    width:100%;
+    height:46px;
+    padding:10px;
+    border:none;
+    border-radius:12px;
+    background:#1e293b;
+    color:white;
+    font-size:18px;
+    box-sizing:border-box;
+}
+button{       width:100%;
         padding:16px;
         margin-top:25px;
         border:none;
