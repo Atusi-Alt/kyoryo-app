@@ -1,8 +1,11 @@
 # =====================================================
-# 橋梁膜厚管理 完全版 FINAL
+# 橋梁膜厚管理 Ultimate Edition
+# 現場最強UI版
 # =====================================================
 
-from flask import Flask, request, redirect
+from flask import Flask
+from flask import request
+from flask import redirect
 from flask import render_template_string
 from flask import session
 
@@ -31,7 +34,7 @@ key = "sb_publishable_Z-nEPLmqRbLV_kWy_lW0GA_b7DC-EIn"
 supabase = create_client(url, key)
 
 # =====================================================
-# LOGIN USER
+# USER
 # =====================================================
 
 users = {
@@ -156,42 +159,42 @@ standards = {
 }
 
 # =====================================================
-# 部位ごとの工程順
+# 部位別工程順
 # =====================================================
 
 part_process_orders = {
 
-    "一般部":{
+    "一般部":[
 
-        "補修塗":0,
-        "下塗1":1,
-        "下塗2":2,
-        "中塗":3,
-        "上塗":4
-    },
+        "補修塗",
+        "下塗1",
+        "下塗2",
+        "中塗",
+        "上塗"
+    ],
 
-    "増し塗り部":{
+    "増し塗り部":[
 
-        "補修塗":0,
-        "下塗1":1,
-        "増し塗1":2,
-        "増し塗2":3,
-        "下塗2":4,
-        "中塗":5,
-        "上塗":6
-    },
+        "補修塗",
+        "下塗1",
+        "増し塗1",
+        "増し塗2",
+        "下塗2",
+        "中塗",
+        "上塗"
+    ],
 
-    "一種部":{
+    "一種部":[
 
-        "素地調整":0,
-        "防食下地":1,
-        "下塗1":2,
-        "増し塗1":3,
-        "増し塗2":4,
-        "下塗2":5,
-        "中塗":6,
-        "上塗":7
-    }
+        "素地調整",
+        "防食下地",
+        "下塗1",
+        "増し塗1",
+        "増し塗2",
+        "下塗2",
+        "中塗",
+        "上塗"
+    ]
 }
 
 # =====================================================
@@ -207,13 +210,15 @@ def login():
 
         password = request.form.get("pw")
 
-        if user_id in users and users[user_id] == password:
+        if user_id in users:
 
-            session["login"] = True
+            if users[user_id] == password:
 
-            session["user"] = user_id
+                session["login"] = True
 
-            return redirect("/")
+                session["user"] = user_id
+
+                return redirect("/")
 
     return """
 
@@ -233,49 +238,55 @@ content='width=device-width, initial-scale=1.0'>
 body{
 
     margin:0;
-    background:#020b22;
+    background:#0f172a;
     color:white;
     font-family:Arial;
 }
 
-.login-box{
+.box{
 
-    max-width:400px;
+    max-width:420px;
     margin:120px auto;
-    background:#081229;
+    background:#111827;
+    border-radius:25px;
     padding:25px;
-    border-radius:20px;
+}
+
+h1{
+
+    text-align:center;
+    color:#38bdf8;
 }
 
 input{
 
     width:100%;
-    height:50px;
+    height:55px;
     margin-top:15px;
-    padding:10px;
+    padding:12px;
     border:none;
-    border-radius:10px;
+    border-radius:12px;
     background:#1e293b;
     color:white;
+    font-size:18px;
     box-sizing:border-box;
 }
 
 button{
 
     width:100%;
-    padding:14px;
+    padding:15px;
     margin-top:20px;
     border:none;
-    border-radius:12px;
-    background:#2563eb;
+    border-radius:14px;
+    background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+    );
     color:white;
-    font-size:18px;
+    font-size:20px;
     font-weight:bold;
-}
-
-h1{
-
-    text-align:center;
 }
 
 </style>
@@ -284,15 +295,18 @@ h1{
 
 <body>
 
-<div class='login-box'>
+<div class='box'>
 
 <h1>橋梁膜厚管理</h1>
 
 <form method='POST'>
 
-<input name='id' placeholder='ID'>
+<input
+name='id'
+placeholder='ID'>
 
-<input type='password'
+<input
+type='password'
 name='pw'
 placeholder='パスワード'>
 
@@ -339,7 +353,9 @@ def home():
         data = {
 
             "datetime":
-            datetime.now().strftime("%Y-%m-%d %H:%M"),
+            datetime.now().strftime(
+                "%Y-%m-%d %H:%M"
+            ),
 
             "user_name":
             session.get("user"),
@@ -369,7 +385,9 @@ def home():
             request.form.get("thickness")
         }
 
-        supabase.table("data").insert(data).execute()
+        supabase.table("data").insert(
+            data
+        ).execute()
 
         return redirect("/")
 
@@ -391,69 +409,106 @@ content='width=device-width, initial-scale=1.0'>
 body{
 
     margin:0;
-    background:#020b22;
+    background:#0f172a;
     color:white;
     font-family:Arial;
 }
 
 .header{
 
-    background:#2563eb;
+    background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+    );
+
     padding:18px;
+
     text-align:center;
+
     font-size:24px;
+
     font-weight:bold;
 }
 
 .container{
 
     max-width:650px;
+
     margin:auto;
-    padding:10px;
+
+    padding:15px;
 }
 
 .card{
 
-    background:#081229;
-    border-radius:20px;
-    padding:20px;
+    background:#111827;
+
+    border-radius:25px;
+
+    padding:22px;
 }
 
 label{
 
     display:block;
-    margin-top:15px;
-    margin-bottom:5px;
+
+    margin-top:16px;
+
+    margin-bottom:6px;
+
     font-weight:bold;
+
+    color:#93c5fd;
 }
 
 input,select{
 
     width:100%;
-    height:52px;
-    padding:10px;
+
+    height:55px;
+
+    padding:12px;
+
     border:none;
-    border-radius:10px;
+
+    border-radius:12px;
+
     background:#1e293b;
+
     color:white;
-    font-size:16px;
+
+    font-size:18px;
+
     box-sizing:border-box;
 }
 
 button{
 
     width:100%;
-    padding:14px;
+
+    padding:15px;
+
     margin-top:18px;
+
     border:none;
+
     border-radius:14px;
-    background:#2563eb;
+
+    background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+    );
+
     color:white;
-    font-size:18px;
+
+    font-size:20px;
+
     font-weight:bold;
 }
 
-.subbtn{
+.sub{
 
     background:#1e293b;
 }
@@ -464,23 +519,24 @@ button{
 
 <body>
 
-<div class="header">
+<div class='header'>
 
 橋梁膜厚管理
 
 </div>
 
-<div class="container">
+<div class='container'>
 
-<div class="card">
+<div class='card'>
 
-<form method="POST">
+<form method='POST'>
 
 <label>現場名</label>
 
-<select id="site"
-name="site"
-onchange="changeBridge()">
+<select
+id='site'
+name='site'
+onchange='changeBridge()'>
 
 <option>ミカドR6-1</option>
 <option>ミカドR6-2</option>
@@ -489,11 +545,15 @@ onchange="changeBridge()">
 
 <label>橋名</label>
 
-<select id="bridge" name="bridge"></select>
+<select
+id='bridge'
+name='bridge'>
+
+</select>
 
 <label>箇所</label>
 
-<select name="place">
+<select name='place'>
 
 <option>上部工</option>
 <option>下部工</option>
@@ -504,7 +564,7 @@ onchange="changeBridge()">
 
 <label>部位</label>
 
-<select name="part">
+<select name='part'>
 
 <option>一般部</option>
 <option>増し塗り部</option>
@@ -514,7 +574,7 @@ onchange="changeBridge()">
 
 <label>ロット</label>
 
-<select name="lot">
+<select name='lot'>
 
 {% for i in range(1,51) %}
 
@@ -526,7 +586,7 @@ onchange="changeBridge()">
 
 <label>測点</label>
 
-<select name="point">
+<select name='point'>
 
 {% for i in range(1,26) %}
 
@@ -538,7 +598,7 @@ onchange="changeBridge()">
 
 <label>工程</label>
 
-<select name="process">
+<select name='process'>
 
 <option>素地調整</option>
 <option>防食下地</option>
@@ -554,11 +614,12 @@ onchange="changeBridge()">
 
 <label>膜厚</label>
 
-<input type="number"
-name="thickness"
+<input
+type='number'
+name='thickness'
 required>
 
-<button type="submit">
+<button type='submit'>
 
 保存
 
@@ -566,9 +627,9 @@ required>
 
 </form>
 
-<a href="/list">
+<a href='/list'>
 
-<button class="subbtn">
+<button class='sub'>
 
 入力情報一覧
 
@@ -576,9 +637,9 @@ required>
 
 </a>
 
-<a href="/logout">
+<a href='/logout'>
 
-<button class="subbtn">
+<button class='sub'>
 
 ログアウト
 
@@ -597,24 +658,31 @@ const bridges = {{ bridges|safe }}
 function changeBridge(){
 
     let site =
-    document.getElementById("site").value
+    document.getElementById(
+        "site"
+    ).value
 
     let bridgeSelect =
-    document.getElementById("bridge")
+    document.getElementById(
+        "bridge"
+    )
 
     bridgeSelect.innerHTML = ""
 
-    bridges[site].forEach(function(bridge){
+    bridges[site].forEach(function(b){
 
         let option =
-        document.createElement("option")
+        document.createElement(
+            "option"
+        )
 
-        option.value = bridge
+        option.value = b
 
-        option.text = bridge
+        option.text = b
 
-        bridgeSelect.appendChild(option)
-
+        bridgeSelect.appendChild(
+            option
+        )
     })
 }
 
@@ -660,11 +728,13 @@ def list_page():
 
         html += f"""
 
-<h1 style='font-size:50px;'>
+<details class='bridge'>
+
+<summary>
 
 {bridge}
 
-</h1>
+</summary>
 
 """
 
@@ -674,193 +744,183 @@ def list_page():
             if x.get("bridge") == bridge
         ]
 
-        for part in parts:
+        for lot in range(1,51):
 
-            part_rows = [
+            lot_rows = [
 
                 x for x in bridge_rows
-                if x.get("part") == part
+                if str(x.get("lot")) == str(lot)
             ]
 
-            if not part_rows:
+            if not lot_rows:
 
                 continue
 
             html += f"""
 
-<h2 style='background:#1e3a8a;
-color:white;
-padding:18px;
-border-radius:16px;'>
+<details class='lot'>
 
-{part}
-
-</h2>
-
-"""
-
-            lot_names = []
-
-            for row in part_rows:
-
-                lot = row.get("lot")
-
-                if lot not in lot_names:
-
-                    lot_names.append(lot)
-
-            for lot in lot_names:
-
-                html += f"""
-
-<details>
-
-<summary style='font-size:28px;
-font-weight:bold;
-margin-top:20px;'>
+<summary>
 
 {lot}ロット
 
 </summary>
 
-<div style='overflow-x:auto;'>
+"""
 
-<table style='width:100%;
-min-width:1300px;
-background:white;
-border-collapse:collapse;
-margin-top:10px;'>
+            point_names = []
 
-<tr>
+            for row in lot_rows:
 
-<th>測点</th>
-<th>日時</th>
-<th>入力者</th>
-<th>箇所</th>
-<th>工程</th>
-<th>膜厚</th>
-<th>前層差</th>
-<th>判定</th>
-<th>編集</th>
-<th>削除</th>
+                point = row.get("point")
 
-</tr>
+                if point not in point_names:
+
+                    point_names.append(point)
+
+            for point in point_names:
+
+                point_rows = [
+
+                    x for x in lot_rows
+                    if x.get("point") == point
+                ]
+
+                html += f"""
+
+<details class='point'>
+
+<summary>
+
+測点 {point}
+
+</summary>
 
 """
 
-                lot_rows = [
+                for part in parts:
 
-                    x for x in part_rows
-                    if x.get("lot") == lot
-                ]
+                    part_rows = [
 
-                current_order = part_process_orders.get(
-                    part,
-                    {}
-                )
+                        x for x in point_rows
+                        if x.get("part") == part
+                    ]
 
-                lot_rows.sort(
+                    if not part_rows:
 
-                    key=lambda x:
-
-                    current_order.get(
-                        x.get("process"),
-                        99
-                    )
-                )
-
-                previous_values = {}
-
-                previous_process_map = {
-
-                    "防食下地":"素地調整",
-
-                    "下塗1":"防食下地",
-
-                    "増し塗1":"下塗1",
-
-                    "増し塗2":"増し塗1",
-
-                    "下塗2":"増し塗2",
-
-                    "中塗":"下塗2",
-
-                    "上塗":"中塗",
-
-                    "補修塗":"上塗"
-                }
-
-                for row in lot_rows:
-
-                    process = row.get("process","")
-
-                    thickness = int(
-                        row.get("thickness",0)
-                    )
-
-                    standard = standards.get(process,0)
-
-                    result = "OK"
-
-                    if process in standards:
-
-                        if thickness < standard:
-
-                            result = "NG"
-
-                    difference = 0
-
-                    previous_process = previous_process_map.get(
-                        process
-                    )
-
-                    if previous_process:
-
-                        if previous_process in previous_values:
-
-                            difference = (
-                                thickness -
-                                previous_values[previous_process]
-                            )
-
-                    previous_values[process] = thickness
-
-                    color = "green"
-
-                    if result == "NG":
-
-                        color = "red"
+                        continue
 
                     html += f"""
 
-<tr>
+<div class='part-title'>
 
-<td>{row.get('point','')}</td>
+{part}
 
-<td>{row.get('datetime','')}</td>
+</div>
 
-<td>{row.get('user_name','')}</td>
+"""
 
-<td>{row.get('place','')}</td>
+                    order = part_process_orders.get(
+                        part,
+                        []
+                    )
 
-<td>{process}</td>
+                    sorted_rows = []
 
-<td>{thickness}μ</td>
+                    for process in order:
 
-<td>{difference}μ</td>
+                        for row in part_rows:
 
-<td style='color:{color};
-font-weight:bold;'>
+                            if row.get("process") == process:
+
+                                sorted_rows.append(row)
+
+                    prev = 0
+
+                    for index,row in enumerate(sorted_rows):
+
+                        process = row.get("process")
+
+                        thickness = int(
+                            row.get("thickness",0)
+                        )
+
+                        difference = 0
+
+                        if index != 0:
+
+                            difference = (
+                                thickness - prev
+                            )
+
+                        prev = thickness
+
+                        result = "OK"
+
+                        if process in standards:
+
+                            if thickness < standards[process]:
+
+                                result = "NG"
+
+                        color = "#22c55e"
+
+                        if result == "NG":
+
+                            color = "#ef4444"
+
+                        html += f"""
+
+<div class='process-card'>
+
+<div class='top'>
+
+<div class='process-name'>
+
+{process}
+
+</div>
+
+<div class='judge'
+style='color:{color};'>
 
 {result}
 
-</td>
+</div>
 
-<td>
+</div>
+
+<div class='value'>
+
+膜厚 {thickness}μ
+
+</div>
+
+<div class='difference'>
+
+前層差 +{difference}μ
+
+</div>
+
+<div class='subdata'>
+
+{row.get('place')}
+
+・
+
+{row.get('datetime')}
+
+・
+
+{row.get('user_name')}
+
+</div>
+
+<div class='btns'>
 
 <a href='/edit/{row['id']}'>
 
-<button>
+<button class='edit'>
 
 編集
 
@@ -868,13 +928,9 @@ font-weight:bold;'>
 
 </a>
 
-</td>
-
-<td>
-
 <a href='/delete/{row['id']}'>
 
-<button style='background:red;'>
+<button class='delete'>
 
 削除
 
@@ -882,21 +938,17 @@ font-weight:bold;'>
 
 </a>
 
-</td>
-
-</tr>
-
-"""
-
-                html += """
-
-</table>
+</div>
 
 </div>
 
-</details>
-
 """
+
+                html += "</details>"
+
+            html += "</details>"
+
+        html += "</details>"
 
     return f"""
 
@@ -916,39 +968,217 @@ content='width=device-width, initial-scale=1.0'>
 body{{
 
     margin:0;
-    padding:15px;
+
     background:#d1d5db;
+
     font-family:Arial;
-}}
 
-th,td{{
-
-    border:1px solid #ccc;
-    padding:12px;
-    text-align:center;
-    white-space:nowrap;
-}}
-
-th{{
-
-    background:#c7d2fe;
-}}
-
-button{{
-
-    padding:10px 14px;
-    border:none;
-    border-radius:8px;
-    background:#2563eb;
-    color:white;
+    padding:15px;
 }}
 
 .main-btn{{
 
     width:100%;
+
     padding:18px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+    );
+
+    color:white;
+
+    font-size:22px;
+
+    font-weight:bold;
+
     margin-bottom:20px;
-    font-size:20px;
+}}
+
+.bridge{{
+
+    background:white;
+
+    border-radius:24px;
+
+    margin-bottom:20px;
+
+    padding:12px;
+}}
+
+.bridge summary{{
+
+    font-size:42px;
+
+    font-weight:bold;
+
+    list-style:none;
+
+    cursor:pointer;
+}}
+
+.lot{{
+
+    margin-top:15px;
+}}
+
+.lot summary{{
+
+    font-size:30px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}}
+
+.point{{
+
+    margin-top:12px;
+
+    background:#e5e7eb;
+
+    border-radius:18px;
+
+    padding:10px;
+}}
+
+.point summary{{
+
+    font-size:24px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}}
+
+.part-title{{
+
+    margin-top:15px;
+
+    background:#1e3a8a;
+
+    color:white;
+
+    padding:15px;
+
+    border-radius:14px;
+
+    font-size:24px;
+
+    font-weight:bold;
+}}
+
+.process-card{{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:18px;
+
+    margin-top:14px;
+
+    box-shadow:0 0 10px rgba(
+        0,0,0,0.1
+    );
+}}
+
+.top{{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+}}
+
+.process-name{{
+
+    font-size:28px;
+
+    font-weight:bold;
+}}
+
+.judge{{
+
+    font-size:26px;
+
+    font-weight:bold;
+}}
+
+.value{{
+
+    margin-top:15px;
+
+    font-size:34px;
+
+    font-weight:bold;
+}}
+
+.difference{{
+
+    margin-top:8px;
+
+    font-size:24px;
+
+    color:#2563eb;
+
+    font-weight:bold;
+}}
+
+.subdata{{
+
+    margin-top:10px;
+
+    color:#6b7280;
+
+    font-size:15px;
+}}
+
+.btns{{
+
+    display:flex;
+
+    gap:10px;
+
+    margin-top:15px;
+}}
+
+.edit{{
+
+    flex:1;
+
+    background:#2563eb;
+}}
+
+.delete{{
+
+    flex:1;
+
+    background:#dc2626;
+}}
+
+button{{
+
+    width:100%;
+
+    padding:12px;
+
+    border:none;
+
+    border-radius:12px;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
 }}
 
 </style>
@@ -1016,41 +1246,62 @@ def edit(id):
 body{{
 
     margin:0;
-    padding:20px;
-    background:#020b22;
+
+    background:#0f172a;
+
     color:white;
+
     font-family:Arial;
+
+    padding:20px;
 }}
 
 .card{{
 
-    background:#081229;
-    padding:20px;
+    background:#111827;
+
     border-radius:20px;
+
+    padding:20px;
 }}
 
 input,select{{
 
     width:100%;
-    height:50px;
+
+    height:55px;
+
     margin-top:15px;
-    padding:10px;
+
+    padding:12px;
+
     border:none;
-    border-radius:10px;
+
+    border-radius:12px;
+
     background:#1e293b;
+
     color:white;
+
     box-sizing:border-box;
 }}
 
 button{{
 
     width:100%;
+
     padding:14px;
-    margin-top:20px;
+
+    margin-top:18px;
+
     border:none;
+
     border-radius:12px;
+
     background:#2563eb;
+
     color:white;
+
     font-size:18px;
 }}
 
@@ -1078,7 +1329,8 @@ for x in processes
 
 </select>
 
-<input type='number'
+<input
+type='number'
 name='thickness'
 value='{row['thickness']}'>
 
