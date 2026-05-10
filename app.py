@@ -13,7 +13,7 @@ app.secret_key = "Sakura6788"
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
 
-key = "ここに公開可能なキー"
+key = "sb_publishable_Z-nEPLmqRbLV_kWy_lW0GA_b7DC-EIn"
 
 supabase = create_client(url, key)
 
@@ -109,19 +109,25 @@ def login():
     return """
 
     <body style='
-    background:#eef2f7;
+    margin:0;
+    background:#0f172a;
     font-family:Arial;
+    color:white;
     '>
 
     <div style='
     width:350px;
     margin:120px auto;
-    background:white;
+    background:#111827;
     padding:30px;
     border-radius:20px;
+    box-shadow:0 0 20px #2563eb;
     '>
 
-    <h1 style='text-align:center;color:#1f3c88;'>
+    <h1 style='
+    text-align:center;
+    color:#38bdf8;
+    '>
 
     橋梁膜厚管理
 
@@ -131,23 +137,46 @@ def login():
 
     <input name="id"
     placeholder="ID"
-    style='width:100%;padding:14px;margin-top:15px;'>
+    style='
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:none;
+    border-radius:10px;
+    background:#1e293b;
+    color:white;
+    box-sizing:border-box;
+    '>
 
     <input type="password"
     name="pw"
     placeholder="パスワード"
-    style='width:100%;padding:14px;margin-top:15px;'>
+    style='
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:none;
+    border-radius:10px;
+    background:#1e293b;
+    color:white;
+    box-sizing:border-box;
+    '>
 
     <button type="submit"
     style='
     width:100%;
     padding:14px;
     margin-top:20px;
-    background:#1f3c88;
-    color:white;
     border:none;
     border-radius:10px;
+    background:linear-gradient(
+    90deg,
+    #2563eb,
+    #06b6d4
+    );
+    color:white;
     font-size:20px;
+    font-weight:bold;
     '>
 
     ログイン
@@ -207,65 +236,85 @@ def home():
     <style>
 
     body{
-        background:#eef2f7;
-        font-family:Arial;
         margin:0;
+        background:#0f172a;
+        font-family:Arial;
+        color:white;
     }
 
     .header{
-        background:#1f3c88;
-        color:white;
+        background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+        );
+        padding:22px;
         text-align:center;
-        padding:20px;
-        font-size:30px;
+        font-size:34px;
         font-weight:bold;
+        box-shadow:0 0 20px #0ea5e9;
     }
 
     .container{
-        max-width:700px;
-        margin:20px auto;
-        background:white;
-        padding:25px;
+        max-width:900px;
+        margin:25px auto;
+        padding:20px;
+    }
+
+    .card{
+        background:#111827;
+        border:1px solid #1e3a8a;
         border-radius:20px;
+        padding:22px;
+        box-shadow:0 0 18px rgba(37,99,235,0.4);
     }
 
     label{
         display:block;
         margin-top:15px;
+        margin-bottom:8px;
+        font-size:18px;
         font-weight:bold;
+        color:#93c5fd;
     }
 
     input,select{
         width:100%;
-        padding:12px;
-        margin-top:5px;
-        border-radius:10px;
-        border:1px solid #ccc;
-        box-sizing:border-box;
+        padding:14px;
+        border:none;
+        border-radius:12px;
+        background:#1e293b;
+        color:white;
         font-size:18px;
+        box-sizing:border-box;
     }
 
     button{
         width:100%;
-        padding:15px;
+        padding:16px;
         margin-top:25px;
         border:none;
-        border-radius:10px;
-        background:#1f3c88;
+        border-radius:14px;
+        background:linear-gradient(
+        90deg,
+        #2563eb,
+        #06b6d4
+        );
         color:white;
-        font-size:22px;
+        font-size:24px;
         font-weight:bold;
     }
 
     .link{
         display:block;
-        text-align:center;
-        margin-top:20px;
-        background:#dfe7ff;
-        padding:14px;
-        border-radius:10px;
+        background:#1e293b;
+        color:#38bdf8;
         text-decoration:none;
-        color:#1f3c88;
+        padding:16px;
+        margin-top:15px;
+        border-radius:14px;
+        text-align:center;
+        font-size:20px;
         font-weight:bold;
     }
 
@@ -320,6 +369,8 @@ def home():
 
     <div class="container">
 
+    <div class="card">
+
     <form method="POST">
 
     <label>現場名</label>
@@ -329,15 +380,11 @@ def home():
     onchange="updateBridge()">
 
     <option value="ミカドR6-1">
-
     ミカドR6-1
-
     </option>
 
     <option value="ミカドR6-2">
-
     ミカドR6-2
-
     </option>
 
     </select>
@@ -424,386 +471,13 @@ def home():
 
     </div>
 
+    </div>
+
     </body>
 
     </html>
 
     """, bridges=bridges)
-
-# =====================================
-# 一覧
-# =====================================
-
-@app.route("/list")
-def list_page():
-
-    response = (
-        supabase
-        .table("data")
-        .select("*")
-        .execute()
-    )
-
-    df = pd.DataFrame(response.data)
-
-    html = ""
-
-    if len(df) == 0:
-
-        html = "<h1>データなし</h1>"
-
-    else:
-
-        sites = sorted(df["site"].unique())
-
-        for site in sites:
-
-            html += f"""
-
-            <div style='
-            background:#1f3c88;
-            color:white;
-            padding:15px;
-            border-radius:10px;
-            margin-top:30px;
-            font-size:24px;
-            font-weight:bold;
-            '>
-
-            {site}
-
-            </div>
-
-            """
-
-            site_df = df[df["site"] == site]
-
-            bridges_unique = sorted(
-                site_df["bridge"].unique()
-            )
-
-            for bridge in bridges_unique:
-
-                html += f"""
-
-                <a href="/bridge/{bridge}"
-                style='
-                display:block;
-                background:white;
-                padding:15px;
-                margin-top:10px;
-                border-radius:10px;
-                text-decoration:none;
-                color:#1f3c88;
-                font-size:22px;
-                font-weight:bold;
-                '>
-
-                {bridge}
-
-                </a>
-
-                """
-
-    return f"""
-
-    <body style='
-    background:#eef2f7;
-    font-family:Arial;
-    padding:20px;
-    '>
-
-    <a href='/home'
-    style='
-    display:inline-block;
-    background:#1f3c88;
-    color:white;
-    padding:12px 20px;
-    border-radius:10px;
-    text-decoration:none;
-    margin-bottom:20px;
-    '>
-
-    戻る
-
-    </a>
-
-    <h1>入力情報一覧</h1>
-
-    {html}
-
-    </body>
-
-    """
-
-# =====================================
-# 橋詳細
-# =====================================
-
-@app.route("/bridge/<bridge>")
-def bridge_page(bridge):
-
-    response = (
-        supabase
-        .table("data")
-        .select("*")
-        .eq("bridge", bridge)
-        .execute()
-    )
-
-    df = pd.DataFrame(response.data)
-
-    html = f"""
-
-    <h1 style='color:#1f3c88;'>
-
-    {bridge}
-
-    </h1>
-
-    """
-
-    if len(df) == 0:
-
-        return html + "データなし"
-
-    parts = [
-        "一般部",
-        "増し塗り部",
-        "一種部"
-    ]
-
-    for part in parts:
-
-        part_df = df[df["part"] == part]
-
-        if len(part_df) == 0:
-
-            continue
-
-        html += f"""
-
-        <div style='
-        background:#1f3c88;
-        color:white;
-        padding:15px;
-        border-radius:10px;
-        margin-top:30px;
-        font-size:24px;
-        font-weight:bold;
-        '>
-
-        {part}
-
-        </div>
-
-        """
-
-        lots = sorted(part_df["lot"].unique())
-
-        for lot in lots:
-
-            html += f"""
-
-            <details style='
-            background:white;
-            padding:15px;
-            margin-top:15px;
-            border-radius:10px;
-            '>
-
-            <summary style='
-            font-size:24px;
-            font-weight:bold;
-            cursor:pointer;
-            color:#1f3c88;
-            '>
-
-            {lot}ロット
-
-            </summary>
-
-            """
-
-            lot_df = part_df[
-                part_df["lot"] == lot
-            ]
-
-            points = sorted(
-                lot_df["point"].unique(),
-                key=int
-            )
-
-            for point in points:
-
-                point_df = lot_df[
-                    lot_df["point"] == point
-                ]
-
-                html += f"""
-
-                <h3 style='margin-top:25px;'>
-
-                測点 {point}
-
-                </h3>
-
-                <table style='
-                width:100%;
-                border-collapse:collapse;
-                background:white;
-                '>
-
-                <tr style='background:#dfe7ff;'>
-
-                <th>工程</th>
-                <th>膜厚</th>
-                <th>増加量</th>
-                <th>判定</th>
-                <th>入力者</th>
-                <th>日時</th>
-
-                </tr>
-
-                """
-
-                previous = None
-
-                for i,row in point_df.iterrows():
-
-                    thickness = int(
-                        row["thickness"]
-                    )
-
-                    increase = "-"
-
-                    result = "-"
-
-                    color = "black"
-
-                    if previous is not None:
-
-                        diff = (
-                            thickness - previous
-                        )
-
-                        increase = f"+{diff}"
-
-                        standard = standards.get(
-                            row["process"],
-                            0
-                        )
-
-                        if diff >= standard:
-
-                            result = "○"
-
-                            color = "green"
-
-                        else:
-
-                            result = "✕"
-
-                            color = "red"
-
-                    previous = thickness
-
-                    html += f"""
-
-                    <tr>
-
-                    <td style='
-                    padding:10px;
-                    border:1px solid #ccc;
-                    '>
-
-                    {row["process"]}
-
-                    </td>
-
-                    <td style='
-                    padding:10px;
-                    border:1px solid #ccc;
-                    '>
-
-                    {thickness}μ
-
-                    </td>
-
-                    <td style='
-                    padding:10px;
-                    border:1px solid #ccc;
-                    '>
-
-                    {increase}
-
-                    </td>
-
-                    <td style='
-                    padding:10px;
-                    border:1px solid #ccc;
-                    color:{color};
-                    font-weight:bold;
-                    '>
-
-                    {result}
-
-                    </td>
-
-                    <td style='
-                    padding:10px;
-                    border:1px solid #ccc;
-                    '>
-
-                    {row["user_name"]}
-
-                    </td>
-
-                    <td style='
-                    padding:10px;
-                    border:1px solid #ccc;
-                    '>
-
-                    {row["datetime"]}
-
-                    </td>
-
-                    </tr>
-
-                    """
-
-                html += "</table>"
-
-            html += "</details>"
-
-    return f"""
-
-    <body style='
-    background:#eef2f7;
-    font-family:Arial;
-    padding:20px;
-    '>
-
-    <a href='/list'
-    style='
-    display:inline-block;
-    background:#1f3c88;
-    color:white;
-    padding:12px 20px;
-    border-radius:10px;
-    text-decoration:none;
-    margin-bottom:20px;
-    '>
-
-    戻る
-
-    </a>
-
-    {html}
-
-    </body>
-
-    """
 
 # =====================================
 # 起動
