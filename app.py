@@ -16,7 +16,7 @@ app.secret_key = "Sakura6788"
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
 
-key = "ここに公開可能なキーを貼る"
+key = "sb_publishable_Z-nEPLmqRbLV_kWy_lW0GA_b7DC-EIn"
 
 supabase = create_client(url, key)
 
