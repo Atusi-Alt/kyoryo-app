@@ -16,7 +16,7 @@ app.secret_key = "Sakura6788"
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
 
-key = "sb_publishable_Z-nEPLmqRbLV_kWy_lW0GA_b7DC-EIn"
+key = "ここに公開可能なキーを貼る"
 
 supabase = create_client(url, key)
 
@@ -886,79 +886,3 @@ def bridge_page(bridge):
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
-
-# requirements.txt
-
-```txt
-flask
-pandas
-supabase
-gunicorn
-```
-
-# Supabase側で必要なテーブル
-
-テーブル名:
-
-```txt
-data
-```
-
-カラム:
-
-```txt
-id
-int8
-PRIMARY KEY
-```
-
-```txt
-datetime
-text
-```
-
-```txt
-user_name
-text
-```
-
-```txt
-site
-text
-```
-
-```txt
-bridge
-text
-```
-
-```txt
-place
-text
-```
-
-```txt
-part
-text
-```
-
-```txt
-lot
-text
-```
-
-```txt
-point
-text
-```
-
-```txt
-process
-text
-```
-
-```txt
-thickness
-text
-```
