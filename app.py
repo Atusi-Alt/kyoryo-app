@@ -1,6 +1,6 @@
 # =====================================================
 # 橋梁膜厚管理 完全版
-# ログイン・一覧・編集・削除・前層差対応
+# 全層前層差自動計算対応
 # =====================================================
 
 from flask import Flask, request, redirect, render_template_string, session
@@ -78,10 +78,6 @@ parts = [
     "一種部"
 ]
 
-lots = [str(i) for i in range(1,51)]
-
-points = [str(i) for i in range(1,26)]
-
 processes = [
     "防食下地",
     "下塗1",
@@ -92,10 +88,6 @@ processes = [
     "上塗",
     "補修塗"
 ]
-
-# =====================================================
-# STANDARD
-# =====================================================
 
 standards = {
     "防食下地":75,
@@ -129,9 +121,13 @@ def login():
     return """
 
 <!DOCTYPE html>
+
 <html>
+
 <head>
+
 <meta charset='UTF-8'>
+
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 
 <style>
@@ -227,15 +223,40 @@ def home():
 
         standard = standards.get(process,0)
 
+        # =================================================
+        # 前層設定
+        # =================================================
+
+        previous_process_map = {
+
+            "防食下地": None,
+
+            "下塗1": "防食下地",
+
+            "増し塗1": "下塗1",
+
+            "増し塗2": "増し塗1",
+
+            "下塗2": "増し塗2",
+
+            "中塗": "下塗2",
+
+            "上塗": "中塗",
+
+            "補修塗": "上塗"
+        }
+
+        previous_process = previous_process_map.get(process)
+
         previous_thickness = 0
 
         difference = 0
 
-        process_index = processes.index(process)
+        # =================================================
+        # 前層検索
+        # =================================================
 
-        if process_index > 0:
-
-            previous_process = processes[process_index - 1]
+        if previous_process:
 
             previous_data = supabase.table("data")\
                 .select("*")\
@@ -258,10 +279,18 @@ def home():
                     thickness - previous_thickness
                 )
 
+        # =================================================
+        # 判定
+        # =================================================
+
         result = "OK"
 
         if thickness < standard:
             result = "NG"
+
+        # =================================================
+        # 保存
+        # =================================================
 
         data = {
 
@@ -295,6 +324,9 @@ def home():
             "thickness":
             thickness,
 
+            "previous_process":
+            previous_process,
+
             "previous_thickness":
             previous_thickness,
 
@@ -312,10 +344,13 @@ def home():
     return render_template_string("""
 
 <!DOCTYPE html>
+
 <html>
+
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -389,7 +424,9 @@ button{
 <body>
 
 <div class="header">
+
 橋梁膜厚管理
+
 </div>
 
 <div class="container">
@@ -522,6 +559,7 @@ changeBridge()
 </script>
 
 </body>
+
 </html>
 
 """, bridges=json.dumps(bridges))
@@ -551,49 +589,32 @@ def list_page():
 
     for bridge in bridge_names:
 
-        html += f"""
-
-<details>
-
-<summary style='font-size:30px;font-weight:bold;margin-top:20px;'>
-
-{bridge}
-
-</summary>
-
-"""
+        html += f"<h1>{bridge}</h1>"
 
         bridge_rows = [x for x in rows if x.get("bridge") == bridge]
 
-        part_names = []
+        for part in parts:
 
-        for row in bridge_rows:
+            part_rows = [
+                x for x in bridge_rows
+                if x.get("part") == part
+            ]
 
-            part = row.get("part")
-
-            if part not in part_names:
-                part_names.append(part)
-
-        for part in part_names:
+            if not part_rows:
+                continue
 
             html += f"""
 
-<details>
-
-<summary style='font-size:24px;
-background:#1e3a8a;
+<h2 style='background:#1e3a8a;
 color:white;
 padding:12px;
-border-radius:10px;
-margin-top:15px;'>
+border-radius:10px;'>
 
 {part}
 
-</summary>
+</h2>
 
 """
-
-            part_rows = [x for x in bridge_rows if x.get("part") == part]
 
             lot_names = []
 
@@ -610,9 +631,9 @@ margin-top:15px;'>
 
 <details>
 
-<summary style='font-size:20px;
-margin-top:15px;
-font-weight:bold;'>
+<summary style='font-size:22px;
+font-weight:bold;
+margin-top:10px;'>
 
 {lot}ロット
 
@@ -643,7 +664,10 @@ margin-top:10px;'>
 
 """
 
-                lot_rows = [x for x in part_rows if x.get("lot") == lot]
+                lot_rows = [
+                    x for x in part_rows
+                    if x.get("lot") == lot
+                ]
 
                 for row in lot_rows:
 
@@ -672,7 +696,8 @@ margin-top:10px;'>
 
 <td>{row.get('difference',0)}μ</td>
 
-<td style='color:{color};font-weight:bold;'>
+<td style='color:{color};
+font-weight:bold;'>
 
 {result}
 
@@ -689,7 +714,9 @@ margin-top:10px;'>
 <td>
 
 <a href='/delete/{row['id']}'>
-<button style='background:red;'>削除</button>
+<button style='background:red;'>
+削除
+</button>
 </a>
 
 </td>
@@ -708,10 +735,6 @@ margin-top:10px;'>
 
 """
 
-            html += "</details>"
-
-        html += "</details>"
-
     return f"""
 
 <!DOCTYPE html>
@@ -722,7 +745,8 @@ margin-top:10px;'>
 
 <meta charset='UTF-8'>
 
-<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<meta name='viewport'
+content='width=device-width, initial-scale=1.0'>
 
 <style>
 
@@ -785,6 +809,11 @@ button{{
 @app.route("/edit/<id>", methods=["GET","POST"])
 def edit(id):
 
+    row = supabase.table("data")\
+        .select("*")\
+        .eq("id", id)\
+        .execute().data[0]
+
     if request.method == "POST":
 
         process = request.form.get("process")
@@ -801,14 +830,14 @@ def edit(id):
         supabase.table("data").update({
 
             "process":process,
+
             "thickness":thickness,
+
             "result":result
 
         }).eq("id", id).execute()
 
         return redirect("/list")
-
-    row = supabase.table("data").select("*").eq("id", id).execute().data[0]
 
     return f"""
 
@@ -873,18 +902,42 @@ button{{
 
 <select name='process'>
 
-<option {'selected' if row['process']=='防食下地' else ''}>防食下地</option>
-<option {'selected' if row['process']=='下塗1' else ''}>下塗1</option>
-<option {'selected' if row['process']=='増し塗1' else ''}>増し塗1</option>
-<option {'selected' if row['process']=='増し塗2' else ''}>増し塗2</option>
-<option {'selected' if row['process']=='下塗2' else ''}>下塗2</option>
-<option {'selected' if row['process']=='中塗' else ''}>中塗</option>
-<option {'selected' if row['process']=='上塗' else ''}>上塗</option>
-<option {'selected' if row['process']=='補修塗' else ''}>補修塗</option>
+<option {'selected' if row['process']=='防食下地' else ''}>
+防食下地
+</option>
+
+<option {'selected' if row['process']=='下塗1' else ''}>
+下塗1
+</option>
+
+<option {'selected' if row['process']=='増し塗1' else ''}>
+増し塗1
+</option>
+
+<option {'selected' if row['process']=='増し塗2' else ''}>
+増し塗2
+</option>
+
+<option {'selected' if row['process']=='下塗2' else ''}>
+下塗2
+</option>
+
+<option {'selected' if row['process']=='中塗' else ''}>
+中塗
+</option>
+
+<option {'selected' if row['process']=='上塗' else ''}>
+上塗
+</option>
+
+<option {'selected' if row['process']=='補修塗' else ''}>
+補修塗
+</option>
 
 </select>
 
-<input type='number' name='thickness'
+<input type='number'
+name='thickness'
 value='{row['thickness']}'>
 
 <button type='submit'>
@@ -894,9 +947,13 @@ value='{row['thickness']}'>
 </form>
 
 <a href='/list'>
+
 <button>
+
 戻る
+
 </button>
+
 </a>
 
 </div>
@@ -914,7 +971,10 @@ value='{row['thickness']}'>
 @app.route("/delete/<id>")
 def delete(id):
 
-    supabase.table("data").delete().eq("id", id).execute()
+    supabase.table("data")\
+        .delete()\
+        .eq("id", id)\
+        .execute()
 
     return redirect("/list")
 
