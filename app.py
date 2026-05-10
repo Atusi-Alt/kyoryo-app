@@ -13,7 +13,7 @@ app.secret_key = "Sakura6788"
 
 url = "https://xcjgbrzqxkgoiynjsdhc.supabase.co"
 
-key = "ここに公開可能なキーを貼る"
+key = "ここに公開可能なキー"
 
 supabase = create_client(url, key)
 
@@ -22,13 +22,13 @@ supabase = create_client(url, key)
 # ====================================
 
 standards = {
-    "防食下地": 75,
-    "下塗1": 60,
-    "増し塗1": 60,
-    "増し塗2": 60,
-    "下塗2": 60,
-    "中塗り": 30,
-    "上塗り": 25
+    "防食下地":75,
+    "下塗1":60,
+    "増し塗1":60,
+    "増し塗2":60,
+    "下塗2":60,
+    "中塗り":30,
+    "上塗り":25
 }
 
 # ====================================
@@ -36,28 +36,49 @@ standards = {
 # ====================================
 
 users = {
-    "敦司": "6788"
+    "敦司":"6788",
+    "furui":"6788",
+    "tsuchiya":"6788",
+    "akashi":"6788",
+    "kawano":"6788"
 }
 
 # ====================================
-# 現場
+# 橋データ
 # ====================================
 
 bridges = {
 
-    "ミカドR6-1": [
+    "ミカドR6-1":[
         "I 1-286",
         "I 2-286",
         "I 1-287",
         "I 2-287",
         "I 1-290",
-        "I 2-290"
+        "I 2-290",
+        "I 1-291",
+        "I 2-291",
+        "I-287",
+        "I-288",
+        "I-289",
+        "I-290",
+        "I-291",
+        "I-292"
     ],
 
-    "ミカドR6-2": [
+    "ミカドR6-2":[
+        "Ⅱ 1-144",
+        "Ⅱ 2-144",
         "入-144",
+        "Ⅱ 1-145",
+        "Ⅱ 2-145",
         "入-145",
-        "入-146"
+        "Ⅱ 1-146",
+        "Ⅱ 2-146",
+        "入-146",
+        "Ⅱ-145",
+        "Ⅱ-146",
+        "Ⅱ-147"
     ]
 }
 
@@ -65,7 +86,7 @@ bridges = {
 # ログイン
 # ====================================
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET","POST"])
 def login():
 
     if request.method == "POST":
@@ -99,10 +120,10 @@ def login():
     """
 
 # ====================================
-# 入力画面
+# ホーム
 # ====================================
 
-@app.route("/home", methods=["GET", "POST"])
+@app.route("/home", methods=["GET","POST"])
 def home():
 
     if "login" not in session:
@@ -129,6 +150,12 @@ def home():
 
         }).execute()
 
+    site_options = ""
+
+    for site in bridges:
+
+        site_options += f"<option>{site}</option>"
+
     bridge_options = ""
 
     for site in bridges:
@@ -139,17 +166,19 @@ def home():
 
     lot_options = ""
 
-    for i in range(1, 51):
+    for i in range(1,51):
+
         lot_options += f"<option>{i}</option>"
 
     point_options = ""
 
-    for i in range(1, 26):
+    for i in range(1,26):
+
         point_options += f"<option>{i}</option>"
 
     return f"""
 
-    <h1>ブリッジフィルム厚み管理</h1>
+    <h1>橋梁膜厚管理</h1>
 
     <form method="POST">
 
@@ -157,8 +186,7 @@ def home():
 
     <select name="site">
 
-    <option>ミカドR6-1</option>
-    <option>ミカドR6-2</option>
+    {site_options}
 
     </select>
 
@@ -174,7 +202,7 @@ def home():
 
     <br><br>
 
-    所在地<br>
+    箇所<br>
 
     <select name="place">
 
@@ -187,7 +215,7 @@ def home():
 
     <br><br>
 
-    部品<br>
+    部位<br>
 
     <select name="part">
 
@@ -209,7 +237,7 @@ def home():
 
     <br><br>
 
-    測定点<br>
+    測点<br>
 
     <select name="point">
 
@@ -219,11 +247,12 @@ def home():
 
     <br><br>
 
-    工学<br>
+    工程<br>
 
     <select name="process">
 
     <option>防食下地</option>
+    <option>補修塗</option>
     <option>下塗1</option>
     <option>増し塗1</option>
     <option>増し塗2</option>
@@ -235,19 +264,19 @@ def home():
 
     <br><br>
 
-    フィルムは厚い<br>
+    膜厚<br>
 
     <input type="number" name="thickness">
 
     <br><br>
 
-    <button type="submit">セーブ</button>
+    <button type="submit">保存</button>
 
     </form>
 
     <br><br>
 
-    <a href="/list">入力情報の一覧</a>
+    <a href="/list">入力情報一覧</a>
 
     """
 
@@ -265,6 +294,7 @@ def list_page():
     html = "<h1>入力情報一覧</h1>"
 
     if len(df) == 0:
+
         return html + "データなし"
 
     for site in df["site"].unique():
@@ -307,9 +337,10 @@ def bridge_page(bridge):
     html = f"<h1>{bridge}</h1>"
 
     if len(df) == 0:
+
         return html + "データなし"
 
-    parts = ["一般部", "増し塗り部", "一種部"]
+    parts = ["一般部","増し塗り部","一種部"]
 
     for part in parts:
 
@@ -318,6 +349,7 @@ def bridge_page(bridge):
         part_df = df[df["part"] == part]
 
         if len(part_df) == 0:
+
             continue
 
         lots = sorted(part_df["lot"].unique())
@@ -346,7 +378,7 @@ def bridge_page(bridge):
 
             previous = None
 
-            for i, row in lot_df.iterrows():
+            for i,row in lot_df.iterrows():
 
                 thickness = int(row["thickness"])
 
@@ -365,8 +397,11 @@ def bridge_page(bridge):
                     )
 
                     if diff >= standard:
+
                         result = "○"
+
                     else:
+
                         result = "✕"
 
                 previous = thickness
